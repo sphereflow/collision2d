@@ -23,14 +23,22 @@ pub use rect::*;
 pub use traits::*;
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Or {
+pub struct Logic {
+    op: LogicOp,
     a: Box<Geo>,
     b: Box<Geo>,
     pub origin: P2,
     x_axis: V2,
 }
 
-impl Or {
+#[derive(Clone, PartialEq, Debug)]
+pub enum LogicOp {
+    And,
+    Or,
+    AndNot,
+}
+
+impl Logic {
     pub fn get_a(&self) -> Geo {
         let mut ret = (*self.a).clone();
         let transform = Matrix2::new(self.x_axis.x, -self.x_axis.y, self.x_axis.y, self.x_axis.x);
@@ -45,9 +53,13 @@ impl Or {
     }
 }
 
-impl Contains for Or {
+impl Contains for Logic {
     fn contains(&self, p: P2) -> bool {
-        self.get_a().contains(p) || self.get_b().contains(p)
+        match self.op {
+            LogicOp::And => self.get_a().contains(p) && self.get_b().contains(p),
+            LogicOp::Or => self.get_a().contains(p) || self.get_b().contains(p),
+            LogicOp::AndNot => self.get_a().contains(p) && !self.get_b().contains(p),
+        }
     }
 }
 
@@ -59,7 +71,7 @@ pub enum Geo {
     GeoLineSegment(LineSegment),
     GeoPoint(P2),
     GeoMCircle(MCircle),
-    GeoOr(Or),
+    GeoLogic(Logic),
 }
 
 impl Geo {
@@ -75,7 +87,7 @@ impl Geo {
             Geo::GeoLineSegment(ls) => ls.distance(pos) < max_distance,
             Geo::GeoPoint(p) => distance(p, &pos) < max_distance,
             Geo::GeoMCircle(mc) => mc.path.distance(pos) - mc.radius < max_distance,
-            Geo::GeoOr(or) => or.contains(pos),
+            Geo::GeoLogic(l) => l.contains(pos),
         }
     }
 
@@ -174,6 +186,8 @@ impl Geo {
                 mc.radius *= scale;
                 mc.speed_vector *= scale;
             }
+            Geo::GeoLogic(l) => {
+            }
         }
     }
 }
@@ -187,7 +201,7 @@ impl HasOrigin for Geo {
             Geo::GeoLineSegment(ls) => ls.eval_at_r(0.5),
             Geo::GeoPoint(p) => *p,
             Geo::GeoMCircle(mc) => mc.path.eval_at_r(0.5),
-            Geo::GeoOr(or) => or.origin,
+            Geo::GeoLogic(l) => l.origin,
         }
     }
 
@@ -199,7 +213,7 @@ impl HasOrigin for Geo {
             Geo::GeoLineSegment(ls) => ls.set_origin(origin),
             Geo::GeoPoint(p) => *p = origin,
             Geo::GeoMCircle(mc) => mc.path.set_origin(origin),
-            Geo::GeoOr(or) => or.origin = origin,
+            Geo::GeoLogic(l) => l.origin = origin,
         }
     }
 }
@@ -213,7 +227,7 @@ impl Contains for Geo {
             Geo::GeoLineSegment(geo) => geo.distance(p) < 0.00001,
             Geo::GeoPoint(geo) => *geo == p,
             Geo::GeoMCircle(geo) => geo.contains(p),
-            Geo::GeoOr(geo) => geo.contains(p),
+            Geo::GeoLogic(geo) => geo.contains(p),
         }
     }
 }
