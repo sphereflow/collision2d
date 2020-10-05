@@ -92,6 +92,19 @@ impl HasOrigin for LineSegment {
   }
 }
 
+impl Scale for LineSegment {
+    /// scales while a stays fixed
+    fn scale(&mut self, scale_x: Float, scale_y: Float) {
+        self.direction.x *= scale_x;
+        self.direction.y *= scale_y;
+        self.b = self.a + self.direction;
+    }
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        self.a.scale_position(scale_x, scale_y);
+        self.b.scale_position(scale_x, scale_y);
+    }
+}
+
 impl ReflectOn<Line> for LineSegment {
     fn reflect_on_normal(&self, line: &Line) -> Option<(LineSegment, V2)> {
         match self.intersect(line) {
