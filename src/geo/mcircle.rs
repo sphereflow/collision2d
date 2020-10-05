@@ -418,18 +418,31 @@ impl CanCollideWith<MCircle> for MCircle {}
 impl GeoT for MCircle {}
 
 impl HasOrigin for MCircle {
-  fn get_origin(&self) -> P2 {
-      self.path.get_a()
-  }
-  fn set_origin(&mut self, origin: P2) {
-      let v = self.path.get_a() - origin;
-      self.path.shift(v);
-  }
+    fn get_origin(&self) -> P2 {
+        self.path.get_a()
+    }
+    fn set_origin(&mut self, origin: P2) {
+        let v = self.path.get_a() - origin;
+        self.path.shift(v);
+    }
 }
 
 impl Contains for MCircle {
     fn contains(&self, p: P2) -> bool {
         self.path.distance(p) < self.radius
+    }
+}
+
+impl Scale for MCircle {
+    fn scale(&mut self, scale_x: Float, scale_y: Float) {
+        self.radius *= (scale_x + scale_y) * 0.5;
+    }
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        let old_a = self.path.get_a();
+        let mut new_a = self.path.get_a();
+        new_a.scale_position(scale_x, scale_y);
+        let shift = new_a - old_a;
+        self.path.shift(shift);
     }
 }
 
