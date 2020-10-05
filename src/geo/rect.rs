@@ -217,6 +217,17 @@ impl HasOrigin for Rect {
     }
 }
 
+impl Scale for Rect {
+    fn scale(&mut self, scale_x: Float, scale_y: Float) {
+        self.width *= scale_x;
+        self.height *= scale_y;
+    }
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        self.origin.x *= scale_x;
+        self.origin.y *= scale_y;
+    }
+}
+
 impl Contains for Rect {
     fn contains(&self, p: P2) -> bool {
         let rot = Rotation2::rotation_between(&self.x_axis, &Vector2::new(1.0, 0.0));
