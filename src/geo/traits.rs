@@ -60,14 +60,6 @@ impl Scale for P2 {
     }
 }
 
-impl Scale for V2 {
-    fn scale(&mut self, scale_x: Float, scale_y: Float) {
-        self.x *= scale_x;
-        self.y *= scale_y;
-    }
-    fn scale_position(&mut self, _scale_x: Float, _scale_y: Float) {}
-}
-
 pub trait Intersect<T> {
     type Intersection;
 
