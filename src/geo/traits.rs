@@ -47,6 +47,11 @@ where
     }
 }
 
+pub trait Scale {
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float);
+    fn scale(&mut self, scale_x: Float, scale_y: Float);
+}
+
 pub trait Intersect<T> {
     type Intersection;
 
