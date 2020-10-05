@@ -128,6 +128,16 @@ impl HasOrigin for Circle {
     }
 }
 
+impl Scale for Circle {
+    fn scale(&mut self, scale_x: Float, scale_y: Float) {
+        self.radius *= (scale_x + scale_y) * 0.5;
+    }
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        self.origin.x *= scale_x;
+        self.origin.y *= scale_y;
+    }
+}
+
 impl Contains for Circle {
     fn contains(&self, p: P2) -> bool {
         distance(&self.origin, &p) <= self.radius
