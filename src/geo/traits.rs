@@ -53,12 +53,19 @@ pub trait Scale {
 }
 
 impl Scale for P2 {
-  fn scale(&mut self, _scale_x: Float, _scale_y: Float) {
-  }
-  fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
-      self.x *= scale_x;
-      self.y *= scale_y;
-  }
+    fn scale(&mut self, _scale_x: Float, _scale_y: Float) {}
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        self.x *= scale_x;
+        self.y *= scale_y;
+    }
+}
+
+impl Scale for V2 {
+    fn scale(&mut self, _scale_x: Float, _scale_y: Float) {}
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        self.x *= scale_x;
+        self.y *= scale_y;
+    }
 }
 
 pub trait Intersect<T> {
