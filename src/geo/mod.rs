@@ -15,7 +15,7 @@ pub use circle::*;
 pub use line::*;
 pub use line_segment::*;
 pub use mcircle::*;
-use na::{distance, Matrix2, Point2};
+use na::{distance, Matrix2};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 pub use ray::*;
@@ -61,6 +61,18 @@ impl Contains for Logic {
             LogicOp::AndNot => self.get_a().contains(p) & !self.get_b().contains(p),
         }
     }
+}
+
+impl Scale for Logic {
+  fn scale(&mut self, scale_x: Float, scale_y: Float) {
+      self.a.scale_position(scale_x, scale_y);
+      self.b.scale_position(scale_x, scale_y);
+      self.a.scale(scale_x, scale_y);
+      self.b.scale(scale_x, scale_y);
+  }
+  fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+      self.origin.scale_position(scale_x, scale_y);
+  }
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -152,44 +164,31 @@ impl Geo {
             (_, _) => other.time_of_collision(self),
         }
     }
+}
 
-    pub fn scale(&mut self, position_scale_x: Float, position_scale_y: Float, scale: Float) {
+impl Scale for Geo {
+    fn scale(&mut self, scale_x: Float, scale_y: Float) {
         match self {
-            Geo::GeoRect(rect) => {
-                rect.origin.x *= position_scale_x;
-                rect.origin.y *= position_scale_y;
-                rect.width *= scale;
-                rect.height *= scale;
-            }
-            Geo::GeoCircle(circle) => {
-                circle.origin.x *= position_scale_x;
-                circle.origin.y *= position_scale_y;
-                circle.radius *= scale;
-            }
-            Geo::GeoRay(_) => {}
-            Geo::GeoLineSegment(ls) => {
-                let a = ls.get_a();
-                ls.set_a(Point2::new(a.x * position_scale_y, a.y * position_scale_y));
-                let b = ls.get_b() * scale + ls.get_a().coords;
-                ls.set_b(b);
-            }
-            Geo::GeoPoint(p) => {
-                p.x *= position_scale_x;
-                p.y *= position_scale_y;
-            }
-            Geo::GeoMCircle(mc) => {
-                let a = mc.path.get_a();
-                mc.path
-                    .set_a(Point2::new(a.x * position_scale_y, a.y * position_scale_y));
-                let b = mc.path.get_b() * scale + mc.path.get_a().coords;
-                mc.path.set_b(b);
-                mc.radius *= scale;
-                mc.speed_vector *= scale;
-            }
-            Geo::GeoLogic(l) => {
-            }
+            Geo::GeoRect(g) => g.scale(scale_x, scale_y),
+            Geo::GeoMCircle(g) => g.scale(scale_x, scale_y),
+            Geo::GeoPoint(g) => g.scale(scale_x, scale_y),
+            Geo::GeoCircle(g) => g.scale(scale_x, scale_y),
+            Geo::GeoRay(g) => g.scale(scale_x, scale_y),
+            Geo::GeoLineSegment(g) => g.scale(scale_x, scale_y),
+            Geo::GeoLogic(g) => g.scale(scale_x, scale_y),
         }
     }
+  fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+      match self {
+            Geo::GeoRect(g) => g.scale_position(scale_x, scale_y),
+            Geo::GeoMCircle(g) => g.scale_position(scale_x, scale_y),
+            Geo::GeoPoint(g) => g.scale_position(scale_x, scale_y),
+            Geo::GeoCircle(g) => g.scale_position(scale_x, scale_y),
+            Geo::GeoRay(g) => g.scale_position(scale_x, scale_y),
+            Geo::GeoLineSegment(g) => g.scale_position(scale_x, scale_y),
+            Geo::GeoLogic(g) => g.scale_position(scale_x, scale_y),
+      }
+  }
 }
 
 impl HasOrigin for Geo {
