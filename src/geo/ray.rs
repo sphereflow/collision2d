@@ -428,6 +428,14 @@ impl HasOrigin for Ray {
     }
 }
 
+impl Scale for Ray {
+    fn scale(&mut self, _scale_x: Float, _scale_y: Float) {
+    }
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        self.origin.scale(scale_x, scale_y);
+    }
+}
+
 impl Distance for Ray {
     fn distance(&self, p: P2) -> Float {
         let normal = self.get_normal();
