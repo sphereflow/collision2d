@@ -81,15 +81,15 @@ impl LineSegment {
 }
 
 impl HasOrigin for LineSegment {
-  fn get_origin(&self) -> P2 {
-    ((self.a.coords + self.b.coords) * 0.5).into()
-  }
-  fn set_origin(&mut self, origin: P2) {
+    fn get_origin(&self) -> P2 {
+        ((self.a.coords + self.b.coords) * 0.5).into()
+    }
+    fn set_origin(&mut self, origin: P2) {
         let dir = self.b - self.a;
         let old_pos = self.get_origin();
         self.a = Point::from(self.a + origin.coords - old_pos);
         self.b = self.a + dir;
-  }
+    }
 }
 
 impl Scale for LineSegment {
@@ -130,7 +130,11 @@ impl ReflectOn<Ray> for LineSegment {
                 let line: Line = ray.into();
                 let dist = line.distance(self.b);
                 let new_b = self.b - 2.0 * dist * n;
-                Some((LineSegment::from_ab(Point2::from(intersection), new_b), n, intersection))
+                Some((
+                    LineSegment::from_ab(Point2::from(intersection), new_b),
+                    n,
+                    intersection,
+                ))
             }
             None => None,
         }
@@ -148,7 +152,11 @@ impl ReflectOn<LineSegment> for LineSegment {
                 let line: Line = ls.into();
                 let dist = line.distance(self.b);
                 let new_b = self.b - 2.0 * dist * n;
-                Some((LineSegment::from_ab(Point2::from(intersection), new_b), n, intersection))
+                Some((
+                    LineSegment::from_ab(Point2::from(intersection), new_b),
+                    n,
+                    intersection,
+                ))
             }
             None => None,
         }
