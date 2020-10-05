@@ -57,6 +57,16 @@ impl HasOrigin for Line {
     }
 }
 
+impl Scale for Line {
+    fn scale(&mut self, scale_x: Float, scale_y: Float) {
+        self.direction.x *= scale_x;
+        self.direction.y *= scale_y;
+    }
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        self.origin.scale_position(scale_x, scale_y);
+    }
+}
+
 impl From<&Ray> for Line {
     fn from(ray: &Ray) -> Line {
         Line {
