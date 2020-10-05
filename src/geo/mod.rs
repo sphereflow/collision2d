@@ -56,9 +56,9 @@ impl Logic {
 impl Contains for Logic {
     fn contains(&self, p: P2) -> bool {
         match self.op {
-            LogicOp::And => self.get_a().contains(p) && self.get_b().contains(p),
-            LogicOp::Or => self.get_a().contains(p) || self.get_b().contains(p),
-            LogicOp::AndNot => self.get_a().contains(p) && !self.get_b().contains(p),
+            LogicOp::And => self.get_a().contains(p) & self.get_b().contains(p),
+            LogicOp::Or => self.get_a().contains(p) | self.get_b().contains(p),
+            LogicOp::AndNot => self.get_a().contains(p) & !self.get_b().contains(p),
         }
     }
 }
@@ -76,7 +76,7 @@ pub enum Geo {
 
 impl Geo {
     pub fn does_overlap(&self, other: &Geo) -> bool {
-        self.does_collide(other) || self.contains(self.get_origin())
+        self.does_collide(other) | self.contains(self.get_origin())
     }
 
     pub fn close_to(&self, pos: P2, max_distance: Float) -> bool {
