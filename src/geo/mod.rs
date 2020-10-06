@@ -20,6 +20,7 @@ use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 pub use ray::*;
 pub use rect::*;
+use std::ops::{BitAnd, BitOr};
 pub use traits::*;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -64,15 +65,15 @@ impl Contains for Logic {
 }
 
 impl Scale for Logic {
-  fn scale(&mut self, scale_x: Float, scale_y: Float) {
-      self.a.scale_position(scale_x, scale_y);
-      self.b.scale_position(scale_x, scale_y);
-      self.a.scale(scale_x, scale_y);
-      self.b.scale(scale_x, scale_y);
-  }
-  fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
-      self.origin.scale_position(scale_x, scale_y);
-  }
+    fn scale(&mut self, scale_x: Float, scale_y: Float) {
+        self.a.scale_position(scale_x, scale_y);
+        self.b.scale_position(scale_x, scale_y);
+        self.a.scale(scale_x, scale_y);
+        self.b.scale(scale_x, scale_y);
+    }
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        self.origin.scale_position(scale_x, scale_y);
+    }
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -178,8 +179,8 @@ impl Scale for Geo {
             Geo::GeoLogic(g) => g.scale(scale_x, scale_y),
         }
     }
-  fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
-      match self {
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        match self {
             Geo::GeoRect(g) => g.scale_position(scale_x, scale_y),
             Geo::GeoMCircle(g) => g.scale_position(scale_x, scale_y),
             Geo::GeoPoint(g) => g.scale_position(scale_x, scale_y),
@@ -187,8 +188,8 @@ impl Scale for Geo {
             Geo::GeoRay(g) => g.scale_position(scale_x, scale_y),
             Geo::GeoLineSegment(g) => g.scale_position(scale_x, scale_y),
             Geo::GeoLogic(g) => g.scale_position(scale_x, scale_y),
-      }
-  }
+        }
+    }
 }
 
 impl HasOrigin for Geo {
@@ -242,6 +243,32 @@ impl Distribution<Geo> for Standard {
             _ => Geo::GeoMCircle(rng.gen()),
         }
     }
+}
+
+impl BitAnd for Geo {
+  type Output = Self;
+  fn bitand(self, rhs: Self) -> Self::Output {
+      let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
+      let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
+      let mut  a = Box::new(self.clone());
+      let mut b = Box::new(rhs.clone());
+      a.set_origin(origin - vdir);
+      b.set_origin(origin + vdir);
+      Geo::GeoLogic(Logic{ a, b, origin, op: LogicOp::And, x_axis: V2::new(1., 0.)})
+  }
+}
+
+impl BitOr for Geo {
+  type Output = Self;
+  fn bitor(self, rhs: Self) -> Self::Output {
+      let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
+      let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
+      let mut  a = Box::new(self.clone());
+      let mut b = Box::new(rhs.clone());
+      a.set_origin(origin - vdir);
+      b.set_origin(origin + vdir);
+      Geo::GeoLogic(Logic{ a, b, origin, op: LogicOp::Or, x_axis: V2::new(1., 0.)})
+  }
 }
 
 impl From<P2> for Geo {
