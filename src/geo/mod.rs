@@ -246,29 +246,41 @@ impl Distribution<Geo> for Standard {
 }
 
 impl BitAnd for Geo {
-  type Output = Self;
-  fn bitand(self, rhs: Self) -> Self::Output {
-      let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
-      let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
-      let mut  a = Box::new(self.clone());
-      let mut b = Box::new(rhs.clone());
-      a.set_origin(origin - vdir);
-      b.set_origin(origin + vdir);
-      Geo::GeoLogic(Logic{ a, b, origin, op: LogicOp::And, x_axis: V2::new(1., 0.)})
-  }
+    type Output = Self;
+    fn bitand(self, rhs: Self) -> Self::Output {
+        let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
+        let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
+        let mut a = Box::new(self.clone());
+        let mut b = Box::new(rhs.clone());
+        a.set_origin(origin - vdir);
+        b.set_origin(origin + vdir);
+        Geo::GeoLogic(Logic {
+            a,
+            b,
+            origin,
+            op: LogicOp::And,
+            x_axis: V2::new(1., 0.),
+        })
+    }
 }
 
 impl BitOr for Geo {
-  type Output = Self;
-  fn bitor(self, rhs: Self) -> Self::Output {
-      let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
-      let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
-      let mut  a = Box::new(self.clone());
-      let mut b = Box::new(rhs.clone());
-      a.set_origin(origin - vdir);
-      b.set_origin(origin + vdir);
-      Geo::GeoLogic(Logic{ a, b, origin, op: LogicOp::Or, x_axis: V2::new(1., 0.)})
-  }
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
+        let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
+        let mut a = Box::new(self.clone());
+        let mut b = Box::new(rhs.clone());
+        a.set_origin(origin - vdir);
+        b.set_origin(origin + vdir);
+        Geo::GeoLogic(Logic {
+            a,
+            b,
+            origin,
+            op: LogicOp::Or,
+            x_axis: V2::new(1., 0.),
+        })
+    }
 }
 
 impl From<P2> for Geo {
