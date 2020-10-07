@@ -145,12 +145,12 @@ impl Contains for Circle {
 }
 
 impl Distance for Circle {
-  fn distance(&self, p: P2) -> Float {
-      if self.contains(p) {
-        return distance(&self.origin, &p);
-      }
-      distance(&self.origin, &p) - self.radius
-  }
+    fn distance(&self, p: P2) -> Float {
+        if self.contains(p) {
+            return distance(&self.origin, &p);
+        }
+        distance(&self.origin, &p) - self.radius
+    }
 }
 
 impl Distribution<Circle> for Standard {
@@ -159,6 +159,12 @@ impl Distribution<Circle> for Standard {
             origin: rng.gen(),
             radius: rng.gen(),
         }
+    }
+}
+
+impl HasGeometry for Circle {
+    fn get_geometry(&self) -> Geo {
+        Geo::GeoCircle(*self)
     }
 }
 
