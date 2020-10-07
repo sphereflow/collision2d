@@ -280,6 +280,12 @@ impl ReflectOn<AABB> for Ray {
     }
 }
 
+impl ReflectOn<Logic> for Ray {
+    fn reflect_on_normal_intersect(&self, l: &Logic) -> Option<(Self, V2, P2)> {
+        unimplemented!()
+    }
+}
+
 impl ReflectOn<Geo> for Ray {
     fn reflect_on_normal_intersect(&self, other: &Geo) -> Option<(Self, V2, P2)> {
         match other {
@@ -289,6 +295,7 @@ impl ReflectOn<Geo> for Ray {
             Geo::GeoCircle(c) => self.reflect_on_normal_intersect(c),
             Geo::GeoMCircle(mc) => self.reflect_on_normal_intersect(mc),
             Geo::GeoPoint(_) => None,
+            Geo::GeoLogic(l) => self.reflect_on_normal_intersect(l),
         }
     }
 }
@@ -406,37 +413,42 @@ impl Intersect<AABB> for Ray {
 }
 
 impl Intersect<Logic> for Ray {
-  type Intersection = P2;
-  fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
-      let a = l.get_a();
-      let b = l.get_b();
-      let is_inside = l.contains(self.origin);
-      let isa = self.intersect(&a);
-      let isb = self.intersect(&b);
-      match l.op {
-        LogicOp::And => {
-          if is_inside {
-            nearest_option(&self.origin, &isa, &isb)
-          } else {
-            farthest_option(&self.origin, &isa, &isb)
-          }
-        }
-        LogicOp::Or => {
-            if is_inside {
-              farthest_option(&self.origin, &isa, &isb)
-            } else {
-              nearest_option(&self.origin, &isa, &isb)
+    type Intersection = (P2, Geo);
+    fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
+        let a = l.get_a();
+        let b = l.get_b();
+        let b_clone = b.clone();
+        let is_inside = l.contains(self.origin);
+        let isa = self.intersect(&a);
+        let isb = self.intersect(&b);
+        let match_ab = |(p, w): (P2, Which)| match w {
+            Which::A => (p, a),
+            Which::B => (p, b),
+        };
+        match l.op {
+            LogicOp::And => {
+                if is_inside {
+                    nearest_option(&self.origin, &isa, &isb).map(match_ab)
+                } else {
+                    farthest_option(&self.origin, &isa, &isb).map(match_ab)
+                }
+            }
+            LogicOp::Or => {
+                if is_inside {
+                    farthest_option(&self.origin, &isa, &isb).map(match_ab)
+                } else {
+                    nearest_option(&self.origin, &isa, &isb).map(match_ab)
+                }
+            }
+            LogicOp::AndNot => {
+                if b_clone.contains(self.origin) {
+                    isb.map(|p| (p, b_clone))
+                } else {
+                    nearest_option(&self.origin, &isa, &isb).map(match_ab)
+                }
             }
         }
-        LogicOp::AndNot => {
-            if b.contains(self.origin) {
-              isb
-            } else {
-              nearest_option(&self.origin, &isa, &isb)
-            }
-        }
-      }
-  }
+    }
 }
 
 impl Intersect<Geo> for Ray {
@@ -449,7 +461,7 @@ impl Intersect<Geo> for Ray {
             Geo::GeoCircle(c) => self.intersect(c),
             Geo::GeoMCircle(mc) => self.intersect(mc),
             Geo::GeoPoint(_) => None,
-            Geo::GeoLogic(l) => self.intersect(l),
+            Geo::GeoLogic(l) => self.intersect(l).map(|(p, _)| p),
         }
     }
 }
@@ -464,8 +476,7 @@ impl HasOrigin for Ray {
 }
 
 impl Scale for Ray {
-    fn scale(&mut self, _scale_x: Float, _scale_y: Float) {
-    }
+    fn scale(&mut self, _scale_x: Float, _scale_y: Float) {}
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
         self.origin.scale(scale_x, scale_y);
     }

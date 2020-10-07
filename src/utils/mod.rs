@@ -74,32 +74,36 @@ pub fn smallest_positive_value(a: Float, b: Float) -> Option<Float> {
     }
 }
 
-pub fn nearest_option(p: &P2, oa: &Option<P2>, ob: &Option<P2>) -> Option<P2> {
+pub enum Which {
+  A, B 
+}
+
+pub fn nearest_option(p: &P2, oa: &Option<P2>, ob: &Option<P2>) -> Option<(P2, Which)> {
     if let Some(a) = oa {
         if let Some(b) = ob {
             if distance(p, &a) < distance(p, &b) {
-                Some(*a)
+                Some((*a, Which::A))
             } else {
-                Some(*b)
+                Some((*b, Which::B))
             }
         } else {
-            Some(*a)
+            Some((*a, Which::A))
         }
     } else {
         None
     }
 }
 
-pub fn farthest_option(p: &P2, oa: &Option<P2>, ob: &Option<P2>) -> Option<P2> {
+pub fn farthest_option(p: &P2, oa: &Option<P2>, ob: &Option<P2>) -> Option<(P2, Which)> {
     if let Some(a) = oa {
         if let Some(b) = ob {
             if distance(p, &a) > distance(p, &b) {
-                Some(*a)
+                Some((*a, Which::A))
             } else {
-                Some(*b)
+                Some((*b, Which::B))
             }
         } else {
-            Some(*a)
+            Some((*a, Which::A))
         }
     } else {
         None
