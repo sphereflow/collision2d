@@ -40,6 +40,15 @@ pub enum LogicOp {
 }
 
 impl Logic {
+    pub fn new(op: LogicOp, a: Geo, b: Geo, origin: P2, x_axis: V2) -> Self {
+        Logic {
+            op,
+            a: Box::new(a),
+            b: Box::new(b),
+            origin,
+            x_axis,
+        }
+    }
     pub fn get_a(&self) -> Geo {
         let mut ret = (*self.a).clone();
         let transform = Matrix2::new(self.x_axis.x, -self.x_axis.y, self.x_axis.y, self.x_axis.x);
