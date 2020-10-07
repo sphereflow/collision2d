@@ -1,5 +1,5 @@
 extern crate nalgebra as na;
-use na::{Matrix2, Point2, Unit, Vector2};
+use na::{distance, Matrix2, Point2, Unit, Vector2};
 
 pub type Float = f64;
 pub type P2 = Point2<Float>;
@@ -69,6 +69,38 @@ pub fn smallest_positive_value(a: Float, b: Float) -> Option<Float> {
         }
     } else if b >= 0. {
         Some(b)
+    } else {
+        None
+    }
+}
+
+pub fn nearest_option(p: &P2, oa: &Option<P2>, ob: &Option<P2>) -> Option<P2> {
+    if let Some(a) = oa {
+        if let Some(b) = ob {
+            if distance(p, &a) < distance(p, &b) {
+                Some(*a)
+            } else {
+                Some(*b)
+            }
+        } else {
+            Some(*a)
+        }
+    } else {
+        None
+    }
+}
+
+pub fn farthest_option(p: &P2, oa: &Option<P2>, ob: &Option<P2>) -> Option<P2> {
+    if let Some(a) = oa {
+        if let Some(b) = ob {
+            if distance(p, &a) > distance(p, &b) {
+                Some(*a)
+            } else {
+                Some(*b)
+            }
+        } else {
+            Some(*a)
+        }
     } else {
         None
     }

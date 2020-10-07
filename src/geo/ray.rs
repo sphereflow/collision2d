@@ -405,6 +405,40 @@ impl Intersect<AABB> for Ray {
     }
 }
 
+impl Intersect<Logic> for Ray {
+  type Intersection = P2;
+  fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
+      let a = l.get_a();
+      let b = l.get_b();
+      let is_inside = l.contains(self.origin);
+      let isa = self.intersect(&a);
+      let isb = self.intersect(&b);
+      match l.op {
+        LogicOp::And => {
+          if is_inside {
+            nearest_option(&self.origin, &isa, &isb)
+          } else {
+            farthest_option(&self.origin, &isa, &isb)
+          }
+        }
+        LogicOp::Or => {
+            if is_inside {
+              farthest_option(&self.origin, &isa, &isb)
+            } else {
+              nearest_option(&self.origin, &isa, &isb)
+            }
+        }
+        LogicOp::AndNot => {
+            if b.contains(self.origin) {
+              isb
+            } else {
+              nearest_option(&self.origin, &isa, &isb)
+            }
+        }
+      }
+  }
+}
+
 impl Intersect<Geo> for Ray {
     type Intersection = P2;
     fn intersect(&self, other: &Geo) -> Option<Self::Intersection> {
@@ -415,6 +449,7 @@ impl Intersect<Geo> for Ray {
             Geo::GeoCircle(c) => self.intersect(c),
             Geo::GeoMCircle(mc) => self.intersect(mc),
             Geo::GeoPoint(_) => None,
+            Geo::GeoLogic(l) => self.intersect(l),
         }
     }
 }

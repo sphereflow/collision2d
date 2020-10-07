@@ -25,7 +25,7 @@ pub use traits::*;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Logic {
-    op: LogicOp,
+    pub op: LogicOp,
     a: Box<Geo>,
     b: Box<Geo>,
     pub origin: P2,
