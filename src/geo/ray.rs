@@ -282,7 +282,8 @@ impl ReflectOn<AABB> for Ray {
 
 impl ReflectOn<Logic> for Ray {
     fn reflect_on_normal_intersect(&self, l: &Logic) -> Option<(Self, V2, P2)> {
-        unimplemented!()
+        self.intersect(l)
+            .and_then(|(_, which)| self.reflect_on_normal_intersect(&which))
     }
 }
 
