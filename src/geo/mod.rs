@@ -85,6 +85,16 @@ impl Scale for Logic {
     }
 }
 
+impl Distance for Logic {
+    fn distance(&self, p: P2) -> Float {
+        match self.op {
+          LogicOp::And => self.get_a().distance(p).max(self.get_b().distance(p)),
+          LogicOp::Or => self.get_a().distance(p).min(self.get_b().distance(p)),
+          LogicOp::AndNot => self.get_a().distance(p),
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Debug)]
 pub enum Geo {
     GeoRect(Rect),
@@ -237,6 +247,24 @@ impl Contains for Geo {
             Geo::GeoPoint(geo) => *geo == p,
             Geo::GeoMCircle(geo) => geo.contains(p),
             Geo::GeoLogic(geo) => geo.contains(p),
+        }
+    }
+}
+
+impl Distance for Geo {
+    fn distance(&self, p: P2) -> Float {
+        match self {
+            Geo::GeoRect(g) => g.distance(p),
+            Geo::GeoCircle(g) => g.distance(p),
+            Geo::GeoRay(g) => g.distance(p),
+            Geo::GeoLineSegment(g) => g.distance(p),
+            Geo::GeoPoint(g) => distance(g, &p),
+            Geo::GeoMCircle(g) => Circle {
+                radius: g.radius,
+                origin: g.get_origin(),
+            }
+            .distance(p),
+            Geo::GeoLogic(g) => g.distance(p),
         }
     }
 }
