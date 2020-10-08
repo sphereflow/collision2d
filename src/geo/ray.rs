@@ -418,20 +418,36 @@ impl Intersect<Logic> for Ray {
     fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
         let a = l.get_a();
         let b = l.get_b();
-        let b_clone = b.clone();
         let is_inside = l.contains(self.origin);
         let isa = self.intersect(&a);
         let isb = self.intersect(&b);
         let match_ab = |(p, w): (P2, Which)| match w {
-            Which::A => (p, a),
-            Which::B => (p, b),
+            Which::A => (p, a.clone()),
+            Which::B => (p, b.clone()),
         };
         match l.op {
             LogicOp::And => {
                 if is_inside {
                     nearest_option(&self.origin, &isa, &isb).map(match_ab)
                 } else {
-                    farthest_option(&self.origin, &isa, &isb).map(match_ab)
+                    farthest_option(&self.origin, &isa, &isb).and_then(|(p, w)| {
+                      match w {
+                      Which::A => {
+                        if b.contains(p) {
+                          Some((p, a))
+                        } else {
+                          None
+                        }
+                      }
+                      Which::B => {
+                        if a.contains(p) {
+                          Some((p, b))
+                        } else {
+                          None
+                        }
+                      }
+                      }
+                    })
                 }
             }
             LogicOp::Or => {
@@ -442,8 +458,8 @@ impl Intersect<Logic> for Ray {
                 }
             }
             LogicOp::AndNot => {
-                if b_clone.contains(self.origin) {
-                    isb.map(|p| (p, b_clone))
+                if b.contains(self.origin) {
+                    isb.map(|p| (p, b))
                 } else {
                     nearest_option(&self.origin, &isa, &isb).map(match_ab)
                 }
