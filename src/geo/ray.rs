@@ -378,9 +378,7 @@ impl Intersect<Rect> for Ray {
         for ls in rect.line_segments().iter() {
             if let Some(v) = self.intersect(ls) {
                 if let Some(cv) = closest {
-                    if distance(&self.origin, &v)
-                        < distance(&self.origin, &cv)
-                    {
+                    if distance(&self.origin, &v) < distance(&self.origin, &cv) {
                         closest = Some(v)
                     }
                 } else {
@@ -399,9 +397,7 @@ impl Intersect<AABB> for Ray {
         for ls in rect.line_segments().iter() {
             if let Some(v) = self.intersect(ls) {
                 if let Some(cv) = closest {
-                    if distance(&self.origin, &v)
-                        < distance(&self.origin, &cv)
-                    {
+                    if distance(&self.origin, &v) < distance(&self.origin, &cv) {
                         closest = Some(v)
                     } else {
                         closest = Some(v);
@@ -430,23 +426,21 @@ impl Intersect<Logic> for Ray {
                 if is_inside {
                     nearest_option(&self.origin, &isa, &isb).map(match_ab)
                 } else {
-                    farthest_option(&self.origin, &isa, &isb).and_then(|(p, w)| {
-                      match w {
-                      Which::A => {
-                        if b.contains(p) {
-                          Some((p, a))
-                        } else {
-                          None
+                    farthest_option(&self.origin, &isa, &isb).and_then(|(p, w)| match w {
+                        Which::A => {
+                            if b.contains(p) {
+                                Some((p, a))
+                            } else {
+                                None
+                            }
                         }
-                      }
-                      Which::B => {
-                        if a.contains(p) {
-                          Some((p, b))
-                        } else {
-                          None
+                        Which::B => {
+                            if a.contains(p) {
+                                Some((p, b))
+                            } else {
+                                None
+                            }
                         }
-                      }
-                      }
                     })
                 }
             }
@@ -496,6 +490,18 @@ impl Scale for Ray {
     fn scale(&mut self, _scale_x: Float, _scale_y: Float) {}
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
         self.origin.scale(scale_x, scale_y);
+    }
+}
+
+impl ClosestPoint for Ray {
+    fn closest_point_to(&self, p: &P2) -> P2 {
+        let po = p - self.origin;
+        let r = self.direction.dot(&po);
+        if r < 0. {
+            self.origin
+        } else {
+            self.origin + r * self.get_direction()
+        }
     }
 }
 
