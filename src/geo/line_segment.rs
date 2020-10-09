@@ -130,11 +130,7 @@ impl ReflectOn<Ray> for LineSegment {
                 let line: Line = ray.into();
                 let dist = line.distance(&self.b);
                 let new_b = self.b - 2.0 * dist * n;
-                Some((
-                    LineSegment::from_ab(intersection, new_b),
-                    n,
-                    intersection,
-                ))
+                Some((LineSegment::from_ab(intersection, new_b), n, intersection))
             }
             None => None,
         }
@@ -152,11 +148,7 @@ impl ReflectOn<LineSegment> for LineSegment {
                 let line: Line = ls.into();
                 let dist = line.distance(&self.b);
                 let new_b = self.b - 2.0 * dist * n;
-                Some((
-                    LineSegment::from_ab(intersection, new_b),
-                    n,
-                    intersection,
-                ))
+                Some((LineSegment::from_ab(intersection, new_b), n, intersection))
             }
             None => None,
         }
@@ -208,9 +200,17 @@ impl Intersect<LineSegment> for LineSegment {
 
 impl ClosestPoint for LineSegment {
     fn closest_point_to(&self, p: &P2) -> P2 {
-        let po = p - self.a;
+        let pa = p - self.a;
         let d = self.direction.normalize();
-        self.a + d.dot(&po) * d
+        let ra = d.dot(&pa);
+        let rb = d.dot(&(p - self.b));
+        if ra < 0. {
+            self.a
+        } else if rb > 0. {
+            self.b
+        } else {
+            self.a + ra * d
+        }
     }
 }
 
