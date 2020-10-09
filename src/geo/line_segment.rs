@@ -206,6 +206,14 @@ impl Intersect<LineSegment> for LineSegment {
     }
 }
 
+impl ClosestPoint for LineSegment {
+    fn closest_point_to(&self, p: &P2) -> P2 {
+        let po = p - self.a;
+        let d = self.direction.normalize();
+        self.a + d.dot(&po) * d
+    }
+}
+
 impl Distance for LineSegment {
     fn distance(&self, p: &P2) -> Float {
         let normal = self.get_normal();
