@@ -63,16 +63,6 @@ impl Logic {
     }
 }
 
-impl Contains for Logic {
-    fn contains(&self, p: P2) -> bool {
-        match self.op {
-            LogicOp::And => self.get_a().contains(p) & self.get_b().contains(p),
-            LogicOp::Or => self.get_a().contains(p) | self.get_b().contains(p),
-            LogicOp::AndNot => self.get_a().contains(p) & !self.get_b().contains(p),
-        }
-    }
-}
-
 impl Scale for Logic {
     fn scale(&mut self, scale_x: Float, scale_y: Float) {
         self.a.scale_position(scale_x, scale_y);
@@ -82,6 +72,16 @@ impl Scale for Logic {
     }
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
         self.origin.scale_position(scale_x, scale_y);
+    }
+}
+
+impl Contains for Logic {
+    fn contains(&self, p: P2) -> bool {
+        match self.op {
+            LogicOp::And => self.get_a().contains(p) & self.get_b().contains(p),
+            LogicOp::Or => self.get_a().contains(p) | self.get_b().contains(p),
+            LogicOp::AndNot => self.get_a().contains(p) & !self.get_b().contains(p),
+        }
     }
 }
 
