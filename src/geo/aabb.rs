@@ -124,6 +124,26 @@ impl Contains for AABB {
     }
 }
 
+impl Distance for AABB {
+    fn distance(&self, p: &P2) -> Float {
+        let abs_x = (p.x - self.origin.x).abs();
+        let abs_y = (p.y - self.origin.y).abs();
+        let wh = self.width * 0.5;
+        let hh = self.height * 0.5;
+        if abs_x < wh {
+            if abs_y < hh {
+                (abs_x - wh).min(abs_y - hh)
+            } else {
+                abs_x - wh
+            }
+        } else if abs_y < self.height * 0.5 {
+            abs_y - hh
+        } else {
+            Float::sqrt((abs_x - wh).powi(2) + (abs_y - hh).powi(2))
+        }
+    }
+}
+
 impl Distribution<AABB> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> AABB {
         AABB {
