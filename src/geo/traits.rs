@@ -26,6 +26,11 @@ pub trait Distance {
     fn distance(&self, p: &P2) -> Float;
 }
 
+/// trait to calculate the closest point which lies on the circumference of an object to a given point
+pub trait ClosestPoint {
+    fn closest_point_to(&self, p: &P2) -> P2;
+}
+
 pub trait Rotate
 where
     Self: HasOrigin,
