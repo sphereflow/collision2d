@@ -10,7 +10,7 @@ use rand::Rng;
 pub struct Ray {
     origin: P2,
     normal: Normal,
-    direction: Unit<V2>,
+    direction: U2,
 }
 
 impl Ray {

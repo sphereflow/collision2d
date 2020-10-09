@@ -4,6 +4,7 @@ use na::{distance, Matrix2, Point2, Unit, Vector2};
 pub type Float = f64;
 pub type P2 = Point2<Float>;
 pub type V2 = Vector2<Float>;
+pub type U2 = Unit<V2>;
 pub type Normal = Unit<V2>;
 
 pub struct OneOrTwo<T: Copy + Clone> {

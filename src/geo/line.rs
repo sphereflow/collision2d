@@ -16,13 +16,14 @@ use rand::Rng;
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Line {
     pub origin: P2,
-    direction: V2,
+    direction: U2,
     normal: Normal,
 }
 
 impl Line {
     pub fn new(origin: P2, direction: V2) -> Line {
         let normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
+        let direction = Unit::new_normalize(direction);
         Line {
             origin,
             direction,
@@ -35,16 +36,16 @@ impl Line {
     }
 
     pub fn get_direction(&self) -> V2 {
-        self.direction
+        self.direction.into_inner()
     }
 
     pub fn set_direction(&mut self, direction: V2) {
         self.normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
-        self.direction = direction;
+        self.direction = Unit::new_normalize(direction);
     }
 
     pub fn eval_at(&self, r: Float) -> P2 {
-        self.origin + r * self.direction
+        self.origin + r * self.direction.into_inner()
     }
 }
 
@@ -58,9 +59,7 @@ impl HasOrigin for Line {
 }
 
 impl Scale for Line {
-    fn scale(&mut self, scale_x: Float, scale_y: Float) {
-        self.direction.x *= scale_x;
-        self.direction.y *= scale_y;
+    fn scale(&mut self, _scale_x: Float, _scale_y: Float) {
     }
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
         self.origin.scale_position(scale_x, scale_y);
@@ -71,7 +70,7 @@ impl From<&Ray> for Line {
     fn from(ray: &Ray) -> Line {
         Line {
             origin: ray.get_origin(),
-            direction: ray.get_direction(),
+            direction: Unit::new_normalize(ray.get_direction()),
             normal: ray.get_normal(),
         }
     }
@@ -81,7 +80,7 @@ impl From<&LineSegment> for Line {
     fn from(ls: &LineSegment) -> Line {
         Line {
             origin: ls.get_a(),
-            direction: ls.get_direction(),
+            direction: Unit::new_normalize(ls.get_direction()),
             normal: ls.get_normal(),
         }
     }
@@ -92,10 +91,10 @@ impl Intersect<Line> for Line {
 
     // returns r and s
     fn intersect(&self, other: &Line) -> Option<(P2, Float, Float)> {
-        let mut inv = Matrix2::from_columns(&[self.direction, -other.direction]);
+        let mut inv = Matrix2::from_columns(&[self.direction.into_inner(), -other.direction.into_inner()]);
         if inv.try_inverse_mut() {
             let rs = inv * (other.origin - self.origin);
-            Some((self.origin + (self.direction * rs.x), rs.x, rs.y))
+            Some((self.origin + (self.direction.into_inner() * rs.x), rs.x, rs.y))
         } else {
             None
         }
@@ -112,12 +111,12 @@ impl Intersect<LineSegment> for Line {
 
 impl ReflectOn<Line> for Line {
     fn reflect_on_normal_intersect(&self, other: &Line) -> Option<(Self, V2, P2)> {
-        let dmat = Matrix2::from_columns(&[self.direction, -other.direction]);
+        let dmat = Matrix2::from_columns(&[self.direction.into_inner(), -other.direction.into_inner()]);
         match inverse(&dmat) {
             Some(inv) => {
                 let n = other.get_normal().into_inner();
                 let rs = inv * (other.origin - self.origin);
-                let intersection = self.origin + self.direction * rs.x;
+                let intersection = self.origin + self.direction.into_inner() * rs.x;
                 let c1 = n.x * n.x - n.y * n.y;
                 let c2 = 2. * n.x * n.y;
                 let reflected = V2::new(
@@ -127,7 +126,7 @@ impl ReflectOn<Line> for Line {
                 let normal_line = V2::new(-self.direction.y, self.direction.x);
                 let new_line = Line {
                     origin: intersection,
-                    direction: reflected,
+                    direction: Unit::new_normalize(reflected),
                     normal: Unit::new_normalize(normal_line),
                 };
                 Some((new_line, n, intersection))
@@ -139,7 +138,7 @@ impl ReflectOn<Line> for Line {
 
 impl ReflectOn<Ray> for Line {
     fn reflect_on_normal_intersect(&self, other: &Ray) -> Option<(Self, V2, P2)> {
-        let dmat = Matrix2::from_columns(&[self.direction, -other.get_direction()]);
+        let dmat = Matrix2::from_columns(&[self.direction.into_inner(), -other.get_direction()]);
         match inverse(&dmat) {
             Some(inv) => {
                 let n = other.get_normal().into_inner();
@@ -147,7 +146,7 @@ impl ReflectOn<Ray> for Line {
                 if rs[1] < 0. {
                     return None;
                 }
-                let intersection = self.origin + self.direction * rs.x;
+                let intersection = self.origin + self.direction.into_inner() * rs.x;
                 let c1 = n.x * n.x - n.y * n.y;
                 let c2 = 2. * n.x * n.y;
                 let reflected = V2::new(
@@ -157,7 +156,7 @@ impl ReflectOn<Ray> for Line {
                 let normal_line = V2::new(-self.direction.y, self.direction.x);
                 let new_line = Line {
                     origin: intersection,
-                    direction: reflected,
+                    direction: Unit::new_normalize(reflected),
                     normal: Unit::new_normalize(normal_line),
                 };
                 Some((new_line, n, intersection))
@@ -169,7 +168,7 @@ impl ReflectOn<Ray> for Line {
 
 impl ReflectOn<LineSegment> for Line {
     fn reflect_on_normal_intersect(&self, other: &LineSegment) -> Option<(Self, V2, P2)> {
-        let dmat = Matrix2::from_columns(&[self.direction, -other.get_direction()]);
+        let dmat = Matrix2::from_columns(&[self.direction.into_inner(), -other.get_direction()]);
         match inverse(&dmat) {
             Some(inv) => {
                 let n = other.get_normal().into_inner();
@@ -177,7 +176,7 @@ impl ReflectOn<LineSegment> for Line {
                 if rs[1] < 0. || rs[1] > 1. {
                     return None;
                 }
-                let intersection = self.origin + self.direction * rs.x;
+                let intersection = self.origin + self.get_direction() * rs.x;
                 let c1 = n.x * n.x - n.y * n.y;
                 let c2 = 2. * n.x * n.y;
                 let reflected = V2::new(
@@ -187,13 +186,20 @@ impl ReflectOn<LineSegment> for Line {
                 let normal_line = V2::new(-self.direction.y, self.direction.x);
                 let new_line = Line {
                     origin: intersection,
-                    direction: reflected,
+                    direction: Unit::new_normalize(reflected),
                     normal: Unit::new_normalize(normal_line),
                 };
                 Some((new_line, n, intersection))
             }
             None => None,
         }
+    }
+}
+
+impl ClosestPoint for Line {
+    fn closest_point_to(&self, p: &P2) -> P2 {
+        let po = p - self.origin;
+        self.origin + self.direction.dot(&po) * self.get_direction()
     }
 }
 
@@ -205,7 +211,7 @@ impl Distance for Line {
 
 impl Distribution<Line> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Line {
-        let direction: V2 = rng.gen();
+        let direction: U2 = rng.gen();
         let normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
         Line {
             origin: rng.gen(),
