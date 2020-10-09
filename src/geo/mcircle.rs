@@ -433,6 +433,38 @@ impl Contains for MCircle {
     }
 }
 
+impl ClosestPoint for MCircle {
+    fn closest_point_to(&self, p: &P2) -> P2 {
+        // get closest points to outline path
+        let mut path1 = self.path;
+        path1.shift(self.path.get_normal().into_inner() * self.radius);
+        let p1 = path1.closest_point_to(p);
+        let mut path2 = self.path;
+        path2.shift(self.path.get_normal().into_inner() * -self.radius);
+        let p2 = path2.closest_point_to(p);
+        // get closest point to circles
+        let pc1 = Circle {
+            origin: self.path.get_a(),
+            radius: self.radius,
+        }
+        .closest_point_to(p);
+        let pc2 = Circle {
+            origin: self.path.get_a(),
+            radius: self.radius,
+        }
+        .closest_point_to(p);
+        // get the closest point out of the 4
+        let mut min_dist = (p1, distance(p, &p1));
+        for point in [p2, pc1, pc2].iter() {
+            let dist = distance(p, point);
+            if dist < min_dist.1 {
+                min_dist = (*point, dist);
+            }
+        }
+        min_dist.0
+    }
+}
+
 impl Distance for MCircle {
     fn distance(&self, p: &P2) -> Float {
         self.path.distance(p) - self.radius
