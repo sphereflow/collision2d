@@ -433,6 +433,12 @@ impl Contains for MCircle {
     }
 }
 
+impl Distance for MCircle {
+    fn distance(&self, p: P2) -> Float {
+        self.path.distance(p) - self.radius
+    }
+}
+
 impl Scale for MCircle {
     fn scale(&mut self, scale_x: Float, scale_y: Float) {
         self.radius *= (scale_x + scale_y) * 0.5;

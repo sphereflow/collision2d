@@ -243,16 +243,17 @@ impl Contains for Rect {
 impl Distance for Rect {
     fn distance(&self, p: P2) -> Float {
         let mut min_dist = Float::MAX;
-        if self.contains(p) {
-            return distance(&self.origin, &p);
-        }
         for ls in self.line_segments().iter() {
             let dist = ls.distance(p);
             if dist < min_dist {
                 min_dist = dist;
             }
         }
-        min_dist
+        if self.contains(p) {
+            -min_dist
+        } else {
+            min_dist
+        }
     }
 }
 

@@ -146,9 +146,6 @@ impl Contains for Circle {
 
 impl Distance for Circle {
     fn distance(&self, p: P2) -> Float {
-        if self.contains(p) {
-            return distance(&self.origin, &p);
-        }
         distance(&self.origin, &p) - self.radius
     }
 }
