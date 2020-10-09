@@ -198,7 +198,7 @@ impl ReflectOn<LineSegment> for Line {
 }
 
 impl Distance for Line {
-    fn distance(&self, p: P2) -> Float {
+    fn distance(&self, p: &P2) -> Float {
         Vector2::dot(&(p - self.origin), &self.get_normal()).abs()
     }
 }

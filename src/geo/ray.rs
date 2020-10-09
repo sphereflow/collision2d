@@ -137,7 +137,7 @@ impl ReflectOn<Line> for Ray {
             Some(intersection) => {
                 let n = line.get_normal().into_inner();
                 let b = Point2::from(2.0 * intersection - self.origin.coords);
-                let dist = line.distance(Point2::from(b - intersection));
+                let dist = line.distance(&Point2::from(b - intersection));
                 let new_b = b - 2.0 * dist * n;
                 Some((
                     Ray::from_origin(intersection, new_b.coords),
@@ -159,7 +159,7 @@ impl ReflectOn<Ray> for Ray {
                     n = -n;
                 }
                 let b = Point2::from(2.0 * intersection - self.origin);
-                let dist = ray.to_line().distance(b);
+                let dist = ray.to_line().distance(&b);
                 let new_b = b - 2.0 * dist * n;
                 Some((
                     Ray::from_origin(Point2::from(intersection), new_b - intersection),
@@ -500,7 +500,7 @@ impl Scale for Ray {
 }
 
 impl Distance for Ray {
-    fn distance(&self, p: P2) -> Float {
+    fn distance(&self, p: &P2) -> Float {
         let normal = self.get_normal();
         let amp = self.origin - p;
         let dist_ap = amp.norm();

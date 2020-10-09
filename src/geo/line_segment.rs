@@ -110,7 +110,7 @@ impl ReflectOn<Line> for LineSegment {
         match self.intersect(line) {
             Some(i) => {
                 let n = self.normal.into_inner();
-                let dist = line.distance(Point2::from(self.b - i));
+                let dist = line.distance(&Point2::from(self.b - i));
                 let new_b = self.b - 2.0 * dist * n;
                 Some((LineSegment::from_ab(Point2::from(i), new_b), n))
             }
@@ -128,7 +128,7 @@ impl ReflectOn<Ray> for LineSegment {
                     n = -n;
                 }
                 let line: Line = ray.into();
-                let dist = line.distance(self.b);
+                let dist = line.distance(&self.b);
                 let new_b = self.b - 2.0 * dist * n;
                 Some((
                     LineSegment::from_ab(Point2::from(intersection), new_b),
@@ -150,7 +150,7 @@ impl ReflectOn<LineSegment> for LineSegment {
                     n = -n;
                 }
                 let line: Line = ls.into();
-                let dist = line.distance(self.b);
+                let dist = line.distance(&self.b);
                 let new_b = self.b - 2.0 * dist * n;
                 Some((
                     LineSegment::from_ab(Point2::from(intersection), new_b),
@@ -207,11 +207,11 @@ impl Intersect<LineSegment> for LineSegment {
 }
 
 impl Distance for LineSegment {
-    fn distance(&self, p: P2) -> Float {
+    fn distance(&self, p: &P2) -> Float {
         let normal = self.get_normal();
         let amp = self.a - p;
         let dist_ap = amp.norm();
-        let dist_bp = distance(&self.b, &Point2::from(p));
+        let dist_bp = distance(&self.b, p);
         if amp.dot(&(self.b - self.a)) > 0.0 {
             return dist_ap;
         }

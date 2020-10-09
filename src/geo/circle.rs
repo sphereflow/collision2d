@@ -23,7 +23,7 @@ impl Intersect<Line> for Circle {
     type Intersection = (Float, Float);
 
     fn intersect(&self, l: &Line) -> Option<(Float, Float)> {
-        let dist = l.distance(self.origin);
+        let dist = l.distance(&self.origin);
         let dist_sq = dist.powi(2);
         let radius_sq = self.radius.powi(2);
         if dist_sq < radius_sq {
@@ -54,7 +54,7 @@ impl Intersect<Line> for Circle {
 
     fn get_extra_data_intersect(&self, l: &Line) -> Vec<Geo> {
         let mut ret = Vec::new();
-        let dist = l.distance(self.origin);
+        let dist = l.distance(&self.origin);
         let co = self.origin - l.origin;
         let mut n = l.get_normal().into_inner();
         if n.dot(&co) < 0.0 {
@@ -145,7 +145,7 @@ impl Contains for Circle {
 }
 
 impl Distance for Circle {
-    fn distance(&self, p: P2) -> Float {
+    fn distance(&self, p: &P2) -> Float {
         distance(&self.origin, &p) - self.radius
     }
 }

@@ -429,12 +429,12 @@ impl HasOrigin for MCircle {
 
 impl Contains for MCircle {
     fn contains(&self, p: P2) -> bool {
-        self.path.distance(p) < self.radius
+        self.path.distance(&p) < self.radius
     }
 }
 
 impl Distance for MCircle {
-    fn distance(&self, p: P2) -> Float {
+    fn distance(&self, p: &P2) -> Float {
         self.path.distance(p) - self.radius
     }
 }

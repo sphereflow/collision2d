@@ -23,7 +23,7 @@ pub trait Contains {
 
 /// trait for distances between Points and other primitives
 pub trait Distance {
-    fn distance(&self, p: P2) -> Float;
+    fn distance(&self, p: &P2) -> Float;
 }
 
 pub trait Rotate

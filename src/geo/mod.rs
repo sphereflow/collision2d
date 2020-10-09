@@ -86,7 +86,7 @@ impl Scale for Logic {
 }
 
 impl Distance for Logic {
-    fn distance(&self, p: P2) -> Float {
+    fn distance(&self, p: &P2) -> Float {
         match self.op {
           LogicOp::And => self.get_a().distance(p).max(self.get_b().distance(p)),
           LogicOp::Or => self.get_a().distance(p).min(self.get_b().distance(p)),
@@ -115,10 +115,10 @@ impl Geo {
         match self {
             Geo::GeoRect(rect) => rect.contains(pos),
             Geo::GeoCircle(circle) => circle.contains(pos),
-            Geo::GeoRay(ray) => ray.distance(pos) < max_distance,
-            Geo::GeoLineSegment(ls) => ls.distance(pos) < max_distance,
+            Geo::GeoRay(ray) => ray.distance(&pos) < max_distance,
+            Geo::GeoLineSegment(ls) => ls.distance(&pos) < max_distance,
             Geo::GeoPoint(p) => distance(p, &pos) < max_distance,
-            Geo::GeoMCircle(mc) => mc.path.distance(pos) - mc.radius < max_distance,
+            Geo::GeoMCircle(mc) => mc.path.distance(&pos) - mc.radius < max_distance,
             Geo::GeoLogic(l) => l.contains(pos),
         }
     }
@@ -136,13 +136,13 @@ impl Geo {
             (Geo::GeoCircle(c1), Geo::GeoLineSegment(ls2)) => c1.intersect(ls2).is_some(),
             (Geo::GeoCircle(c1), Geo::GeoPoint(p2)) => c1.contains(*p2),
             (Geo::GeoCircle(c1), Geo::GeoMCircle(mc)) => {
-                mc.path.distance(c1.origin) < mc.radius + c1.radius
+                mc.path.distance(&c1.origin) < mc.radius + c1.radius
             }
             (Geo::GeoLineSegment(ls), Geo::GeoRay(ray)) => ray.does_collide(ls),
             (Geo::GeoLineSegment(ls1), Geo::GeoLineSegment(ls2)) => ls1.intersect(ls2).is_some(),
-            (Geo::GeoLineSegment(ls), Geo::GeoPoint(p2)) => ls.distance(*p2) < 0.000_001,
+            (Geo::GeoLineSegment(ls), Geo::GeoPoint(p2)) => ls.distance(p2) < 0.000_001,
             (Geo::GeoLineSegment(ls), Geo::GeoMCircle(mc)) => mc.reflect_on(ls).is_some(),
-            (Geo::GeoPoint(p), Geo::GeoRay(ray)) => ray.distance(*p) < 0.000_001,
+            (Geo::GeoPoint(p), Geo::GeoRay(ray)) => ray.distance(&p) < 0.000_001,
             (Geo::GeoPoint(p1), Geo::GeoPoint(p2)) => p1 == p2,
             (Geo::GeoPoint(p), Geo::GeoMCircle(mc)) => mc.contains(*p),
             (Geo::GeoMCircle(mc), Geo::GeoRay(ray)) => ray.does_collide(mc),
@@ -242,8 +242,8 @@ impl Contains for Geo {
         match self {
             Geo::GeoRect(geo) => geo.contains(p),
             Geo::GeoCircle(geo) => geo.contains(p),
-            Geo::GeoRay(geo) => geo.distance(p) < 0.00001,
-            Geo::GeoLineSegment(geo) => geo.distance(p) < 0.00001,
+            Geo::GeoRay(geo) => geo.distance(&p) < 0.00001,
+            Geo::GeoLineSegment(geo) => geo.distance(&p) < 0.00001,
             Geo::GeoPoint(geo) => *geo == p,
             Geo::GeoMCircle(geo) => geo.contains(p),
             Geo::GeoLogic(geo) => geo.contains(p),
@@ -252,7 +252,7 @@ impl Contains for Geo {
 }
 
 impl Distance for Geo {
-    fn distance(&self, p: P2) -> Float {
+    fn distance(&self, p: &P2) -> Float {
         match self {
             Geo::GeoRect(g) => g.distance(p),
             Geo::GeoCircle(g) => g.distance(p),
