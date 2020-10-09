@@ -514,7 +514,6 @@ impl Distance for Ray {
             return dist_ap;
         }
         let dist_line = amp.dot(&normal).abs();
-        // println!("dist_line: {}, normal: {}, amp: {}, b - a: {}", dist_line, normal, amp, self.b - self.origin);
         dist_line.min(dist_ap)
     }
 }
