@@ -31,6 +31,12 @@ pub trait ClosestPoint {
     fn closest_point_to(&self, p: &P2) -> P2;
 }
 
+impl ClosestPoint for P2 {
+    fn closest_point_to(&self, _p: &P2) -> P2 {
+        *self
+    }
+}
+
 pub trait Rotate
 where
     Self: HasOrigin,
