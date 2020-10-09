@@ -124,6 +124,12 @@ impl Contains for AABB {
     }
 }
 
+impl ClosestPoint for AABB {
+    fn closest_point_to(&self, p: &P2) -> P2 {
+        self.to_rect().closest_point_to(p)
+    }
+}
+
 impl Distance for AABB {
     fn distance(&self, p: &P2) -> Float {
         let abs_x = (p.x - self.origin.x).abs();
