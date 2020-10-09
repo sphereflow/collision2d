@@ -136,7 +136,7 @@ impl ReflectOn<Line> for Ray {
         match self.intersect(line) {
             Some(intersection) => {
                 let n = line.get_normal().into_inner();
-                let b = Point2::from(2.0 * intersection - self.origin.coords);
+                let b = 2.0 * intersection - self.origin.coords;
                 let dist = line.distance(&Point2::from(b - intersection));
                 let new_b = b - 2.0 * dist * n;
                 Some((
@@ -162,7 +162,7 @@ impl ReflectOn<Ray> for Ray {
                 let dist = ray.to_line().distance(&b);
                 let new_b = b - 2.0 * dist * n;
                 Some((
-                    Ray::from_origin(Point2::from(intersection), new_b - intersection),
+                    Ray::from_origin(intersection, new_b - intersection),
                     n,
                     intersection,
                 ))
@@ -378,8 +378,8 @@ impl Intersect<Rect> for Ray {
         for ls in rect.line_segments().iter() {
             if let Some(v) = self.intersect(ls) {
                 if let Some(cv) = closest {
-                    if distance(&self.origin, &Point2::from(v))
-                        < distance(&self.origin, &Point2::from(cv))
+                    if distance(&self.origin, &v)
+                        < distance(&self.origin, &cv)
                     {
                         closest = Some(v)
                     }
@@ -399,8 +399,8 @@ impl Intersect<AABB> for Ray {
         for ls in rect.line_segments().iter() {
             if let Some(v) = self.intersect(ls) {
                 if let Some(cv) = closest {
-                    if distance(&self.origin, &Point2::from(v))
-                        < distance(&self.origin, &Point2::from(cv))
+                    if distance(&self.origin, &v)
+                        < distance(&self.origin, &cv)
                     {
                         closest = Some(v)
                     } else {

@@ -287,8 +287,8 @@ impl BitAnd for Geo {
     fn bitand(self, rhs: Self) -> Self::Output {
         let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
         let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
-        let mut a = Box::new(self.clone());
-        let mut b = Box::new(rhs.clone());
+        let mut a = Box::new(self);
+        let mut b = Box::new(rhs);
         a.set_origin(origin - vdir);
         b.set_origin(origin + vdir);
         Geo::GeoLogic(Logic {
@@ -306,8 +306,8 @@ impl BitOr for Geo {
     fn bitor(self, rhs: Self) -> Self::Output {
         let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
         let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
-        let mut a = Box::new(self.clone());
-        let mut b = Box::new(rhs.clone());
+        let mut a = Box::new(self);
+        let mut b = Box::new(rhs);
         a.set_origin(origin - vdir);
         b.set_origin(origin + vdir);
         Geo::GeoLogic(Logic {

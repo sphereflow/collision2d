@@ -78,7 +78,7 @@ impl Iterator for CollisionQueue {
     fn next(&mut self) -> Option<Self::Item> {
         self.queue.pop().map(|rev| {
             let Reverse(result) = rev;
-            return result;
+            result
         })
     }
 }

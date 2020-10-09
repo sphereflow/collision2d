@@ -112,7 +112,7 @@ impl ReflectOn<Line> for LineSegment {
                 let n = self.normal.into_inner();
                 let dist = line.distance(&Point2::from(self.b - i));
                 let new_b = self.b - 2.0 * dist * n;
-                Some((LineSegment::from_ab(Point2::from(i), new_b), n))
+                Some((LineSegment::from_ab(i, new_b), n))
             }
             None => None,
         }
@@ -131,7 +131,7 @@ impl ReflectOn<Ray> for LineSegment {
                 let dist = line.distance(&self.b);
                 let new_b = self.b - 2.0 * dist * n;
                 Some((
-                    LineSegment::from_ab(Point2::from(intersection), new_b),
+                    LineSegment::from_ab(intersection, new_b),
                     n,
                     intersection,
                 ))
@@ -153,7 +153,7 @@ impl ReflectOn<LineSegment> for LineSegment {
                 let dist = line.distance(&self.b);
                 let new_b = self.b - 2.0 * dist * n;
                 Some((
-                    LineSegment::from_ab(Point2::from(intersection), new_b),
+                    LineSegment::from_ab(intersection, new_b),
                     n,
                     intersection,
                 ))
