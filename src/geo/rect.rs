@@ -240,6 +240,19 @@ impl Contains for Rect {
     }
 }
 
+impl ClosestPoint for Rect {
+    fn closest_point_to(&self, p: &P2) -> P2 {
+        let segments = self.line_segments();
+        let mut ret = segments[0].closest_point_to(p);
+        for candidate in segments[1..].iter().map(|ls| ls.closest_point_to(p)) {
+            if distance(p, &candidate) < distance(p, &ret) {
+                ret = candidate;
+            }
+        }
+        ret
+    }
+}
+
 impl Distance for Rect {
     fn distance(&self, p: &P2) -> Float {
         let mut min_dist = Float::MAX;
