@@ -118,9 +118,9 @@ impl Intersect<Circle> for Circle {
 }
 
 impl Intersect<Rect> for Circle {
-    type Intersection = (Normal, Float);
+    type Intersection = Vec<P2>;
 
-    fn intersect(&self, rect: &Rect) -> Option<(Normal, Float)> {
+    fn intersect(&self, rect: &Rect) -> Option<Vec<P2>> {
         rect.intersect(self)
     }
 }

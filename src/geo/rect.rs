@@ -157,11 +157,11 @@ impl Intersect<LineSegment> for Rect {
         let mut res: Option<OneOrTwo<P2>> = None;
         for rect_ls in self.line_segments().iter() {
             if let Some(intersection) = ls.intersect(rect_ls) {
-               if let Some(oot) = res.as_mut() {
-                 oot.add(intersection);
-               } else {
-                 res = Some(OneOrTwo::new(intersection));
-               }
+                if let Some(oot) = res.as_mut() {
+                    oot.add(intersection);
+                } else {
+                    res = Some(OneOrTwo::new(intersection));
+                }
             }
         }
         res
@@ -169,33 +169,23 @@ impl Intersect<LineSegment> for Rect {
 }
 
 impl Intersect<Circle> for Rect {
-    type Intersection = (Normal, Float);
+    type Intersection = Vec<P2>;
 
-    fn intersect(&self, s: &Circle) -> Option<(Normal, Float)> {
-        let mut intersection_points: Option<OneOrTwo<P2>> = None;
+    fn intersect(&self, circle: &Circle) -> Option<Vec<P2>> {
+        let mut intersection_points = Vec::new();
         for ls in self.line_segments().iter() {
-            if let Some(one_or_two) = s.intersect(ls) {
-                match intersection_points.as_mut() {
-                    Some(oot) => {
-                        oot.mappend(one_or_two);
-                    }
-                    None => intersection_points = Some(one_or_two),
-                }
-            }
-            if let Some((a, b)) = intersection_points.as_ref().and_then(|oot| oot.get_items()) {
-                if let Some((first, rest)) = self.points().split_first() {
-                    let mut min_dist = distance(&s.origin, first);
-                    for p in rest {
-                        let dist = distance(&s.origin, p);
-                        if dist < min_dist {
-                            min_dist = dist;
-                        }
-                    }
-                    return Some((LineSegment::from_ab(a, b).get_normal(), min_dist));
+            if let Some(one_or_two) = circle.intersect(ls) {
+                intersection_points.push(one_or_two.get_first());
+                if let Some(p) = one_or_two.get_second() {
+                    intersection_points.push(p);
                 }
             }
         }
-        None
+        if !intersection_points.is_empty() {
+            Some(intersection_points)
+        } else {
+            None
+        }
     }
 }
 
