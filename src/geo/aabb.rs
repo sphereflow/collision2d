@@ -57,9 +57,9 @@ impl AABB {
 }
 
 impl Intersect<LineSegment> for AABB {
-    type Intersection = P2;
+    type Intersection = OneOrTwo<P2>;
 
-    fn intersect(&self, ls: &LineSegment) -> Option<P2> {
+    fn intersect(&self, ls: &LineSegment) -> Option<OneOrTwo<P2>> {
         self.to_rect().intersect(ls)
     }
 }
