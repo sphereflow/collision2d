@@ -70,6 +70,7 @@ impl Intersect<LineSegment> for Circle {
     // r and s
     type Intersection = OneOrTwo<P2>;
 
+    /// returns the intersection points in order e. g. closest first
     fn intersect(&self, ls: &LineSegment) -> Option<OneOrTwo<P2>> {
         let line: Line = ls.into();
         if let Some((r, s)) = self.intersect(&line) {
@@ -81,16 +82,14 @@ impl Intersect<LineSegment> for Circle {
                         res.swap();
                     }
                 }
-                Some(res)
+                return Some(res);
             } else {
                 if between(s, 0.0, 1.0) {
                     return Some(OneOrTwo::new(line.eval_at(s)));
                 }
-                None
             }
-        } else {
-            None
         }
+        None
     }
 
     fn get_extra_data_intersect(&self, ls: &LineSegment) -> Vec<Geo> {
