@@ -152,16 +152,19 @@ impl Rect {
 }
 
 impl Intersect<LineSegment> for Rect {
-    type Intersection = P2;
-    fn intersect(&self, ls: &LineSegment) -> Option<P2> {
-        let mut res;
-        for other_segment in self.line_segments().iter() {
-            res = ls.intersect(other_segment);
-            if res.is_some() {
-                return res;
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, ls: &LineSegment) -> Option<OneOrTwo<P2>> {
+        let mut res: Option<OneOrTwo<P2>> = None;
+        for rect_ls in self.line_segments().iter() {
+            if let Some(intersection) = ls.intersect(rect_ls) {
+               if let Some(oot) = res.as_mut() {
+                 oot.add(intersection);
+               } else {
+                 res = Some(OneOrTwo::new(intersection));
+               }
             }
         }
-        None
+        res
     }
 }
 
