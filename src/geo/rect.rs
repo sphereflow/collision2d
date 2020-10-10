@@ -190,11 +190,19 @@ impl Intersect<Circle> for Rect {
 }
 
 impl Intersect<Rect> for Rect {
-    type Intersection = ();
+    type Intersection = Vec<P2>;
 
-    fn intersect(&self, other: &Rect) -> Option<()> {
-        if !(self.separates_rect(other) || other.separates_rect(self)) {
-            Some(())
+    fn intersect(&self, other: &Rect) -> Option<Vec<P2>> {
+        let mut intersection_points = Vec::new();
+        for lsa in self.line_segments().iter() {
+            for lsb in other.line_segments().iter() {
+                if let Some(p) = lsa.intersect(lsb) {
+                    intersection_points.push(p);
+                }
+            }
+        }
+        if !intersection_points.is_empty() {
+            Some(intersection_points)
         } else {
             None
         }

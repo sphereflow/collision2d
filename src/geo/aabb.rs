@@ -86,9 +86,9 @@ impl Intersect<Circle> for AABB {
 }
 
 impl Intersect<Rect> for AABB {
-    type Intersection = ();
+    type Intersection = Vec<P2>;
 
-    fn intersect(&self, r: &Rect) -> Option<()> {
+    fn intersect(&self, r: &Rect) -> Option<Vec<P2>> {
         self.to_rect().intersect(r)
     }
 }
