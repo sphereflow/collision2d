@@ -100,14 +100,21 @@ impl Intersect<LineSegment> for Circle {
 }
 
 impl Intersect<Circle> for Circle {
-    type Intersection = Float;
-    fn intersect(&self, other: &Circle) -> Option<Float> {
-        let dist: Float = distance(&self.origin, &other.origin);
-        if dist < (self.radius + other.radius) {
-            Some(dist)
-        } else {
-            None
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, other: &Circle) -> Option<OneOrTwo<P2>> {
+        let c: Float = distance(&self.origin, &other.origin);
+        if c > (self.radius + other.radius) {
+            return None;
         }
+        let a = (self.radius.powi(2) + other.radius.powi(2)) / (2. * c) + 0.5 * c;
+        let dist = (self.radius.powi(2) - a.powi(2)).sqrt();
+        let oon = (self.origin - other.origin).normalize();
+        let n: V2 = V2::new(-oon.y, oon.x);
+        let mut ret = OneOrTwo::new(self.origin + a * oon + n * dist);
+        if a > 0. {
+            ret.add(self.origin - a * oon + n * dist)
+        }
+        Some(ret)
     }
 }
 
