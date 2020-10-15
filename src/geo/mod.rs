@@ -602,13 +602,7 @@ impl Intersect<Ray> for Geo {
             }
             Geo::GeoRay(r) => r.intersect(ray).map(|p| vec![p]),
             Geo::GeoLineSegment(ls) => ls.intersect(ray).map(|p| vec![p]),
-            Geo::GeoRect(r) => r.intersect(ray).map(|oot| {
-                if let Some(p2) = oot.get_second() {
-                    vec![oot.get_first(), p2]
-                } else {
-                    vec![oot.get_first()]
-                }
-            }),
+            Geo::GeoRect(r) => r.intersect(ray).map(|p| vec![p]),
             Geo::GeoCircle(c) => ray.intersect(c).map(|p| vec![p]),
             Geo::GeoMCircle(mc) => ray.intersect(mc).map(|p| vec![p]),
             Geo::GeoLogic(l) => ray.intersect(l).map(|(p, _)| vec![p]),
