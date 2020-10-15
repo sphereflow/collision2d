@@ -76,7 +76,7 @@ impl Scale for Logic {
 }
 
 impl Contains for Logic {
-    fn contains(&self, p: P2) -> bool {
+    fn contains(&self, p: &P2) -> bool {
         match self.op {
             LogicOp::And => self.get_a().contains(p) & self.get_b().contains(p),
             LogicOp::Or => self.get_a().contains(p) | self.get_b().contains(p),
@@ -85,12 +85,236 @@ impl Contains for Logic {
     }
 }
 
+impl ClosestPoint for Logic {
+    fn closest_point_to(&self, p: &P2) -> P2 {
+        let a = self.get_a();
+        let b = self.get_b();
+        let cla = a.closest_point_to(p);
+        let clb = b.closest_point_to(p);
+        let mut candidates;
+        if let Some(intersect) = a.intersect(&b) {
+            candidates = intersect;
+        } else {
+            candidates = Vec::new();
+        }
+        match self.op {
+            LogicOp::And => {
+                if a.contains(&clb) {
+                    candidates.push(clb);
+                }
+                if b.contains(&cla) {
+                    candidates.push(cla);
+                }
+            }
+            LogicOp::Or => {
+                candidates.push(cla);
+                candidates.push(clb);
+            }
+            LogicOp::AndNot => {
+                if a.contains(&clb) {
+                    candidates.push(clb);
+                }
+                if !b.contains(&cla) {
+                    candidates.push(cla);
+                }
+            }
+        }
+        let mut res = candidates[0];
+        for candidate in candidates[1..].into_iter() {
+            if distance(&res, p) > distance(candidate, p) {
+                res = *candidate;
+            }
+        }
+        res
+    }
+}
+
 impl Distance for Logic {
     fn distance(&self, p: &P2) -> Float {
+        let a = self.get_a();
+        let b = self.get_b();
+        let da = a.distance(p);
+        let db = b.distance(p);
+        let mut res = da;
         match self.op {
-          LogicOp::And => self.get_a().distance(p).max(self.get_b().distance(p)),
-          LogicOp::Or => self.get_a().distance(p).min(self.get_b().distance(p)),
-          LogicOp::AndNot => self.get_a().distance(p),
+            LogicOp::And => da.max(db),
+            LogicOp::Or => da.min(db),
+            LogicOp::AndNot => {
+                if a.contains(p) {
+                  res = da.min(-db);
+                }
+                if let Some(intersection_points) = a.intersect(&b) {
+                    for i in intersection_points {
+                      let dip = distance(&i, p);
+                      if dip < da {
+                        res = dip;
+                      }
+                    }
+                    res
+                } else {
+                    res
+                }
+            }
+        }
+    }
+}
+
+impl Intersect<LineSegment> for Logic {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, line_segment: &LineSegment) -> Option<Self::Intersection> {
+        let a = self.get_a();
+        let b = self.get_b();
+        let isa = a
+            .intersect(line_segment)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => b.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => !b.contains(p),
+            });
+        let isb = b
+            .intersect(line_segment)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => a.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => a.contains(p),
+            });
+        let res: Vec<P2> = isa.chain(isb).collect();
+        if !res.is_empty() {
+            Some(res)
+        } else {
+            None
+        }
+    }
+}
+
+impl Intersect<Rect> for Logic {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, rect: &Rect) -> Option<Self::Intersection> {
+        let a = self.get_a();
+        let b = self.get_b();
+        let isa = a
+            .intersect(rect)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => b.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => !b.contains(p),
+            });
+        let isb = b
+            .intersect(rect)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => a.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => a.contains(p),
+            });
+        let res: Vec<P2> = isa.chain(isb).collect();
+        if !res.is_empty() {
+            Some(res)
+        } else {
+            None
+        }
+    }
+}
+
+impl Intersect<Circle> for Logic {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, circle: &Circle) -> Option<Self::Intersection> {
+        let a = self.get_a();
+        let b = self.get_b();
+        let isa = a
+            .intersect(circle)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => b.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => !b.contains(p),
+            });
+        let isb = b
+            .intersect(circle)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => a.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => a.contains(p),
+            });
+        let res: Vec<P2> = isa.chain(isb).collect();
+        if !res.is_empty() {
+            Some(res)
+        } else {
+            None
+        }
+    }
+}
+
+impl Intersect<MCircle> for Logic {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, mcircle: &MCircle) -> Option<Self::Intersection> {
+        let a = self.get_a();
+        let b = self.get_b();
+        let isa = a
+            .intersect(mcircle)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => b.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => !b.contains(p),
+            });
+        let isb = b
+            .intersect(mcircle)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => a.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => a.contains(p),
+            });
+        let res: Vec<P2> = isa.chain(isb).collect();
+        if !res.is_empty() {
+            Some(res)
+        } else {
+            None
+        }
+    }
+}
+
+impl Intersect<Logic> for Logic {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, logic: &Logic) -> Option<Self::Intersection> {
+        let a = self.get_a();
+        let b = self.get_b();
+        let isa = a
+            .intersect(logic)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => b.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => !b.contains(p),
+            });
+        let isb = b
+            .intersect(logic)
+            .into_iter()
+            .flat_map(|i| i.into_iter())
+            .filter(|p| match self.op {
+                LogicOp::And => a.contains(p),
+                LogicOp::Or => true,
+                LogicOp::AndNot => a.contains(p),
+            });
+        let res: Vec<P2> = isa.chain(isb).collect();
+        if !res.is_empty() {
+            Some(res)
+        } else {
+            None
         }
     }
 }
@@ -108,10 +332,10 @@ pub enum Geo {
 
 impl Geo {
     pub fn does_overlap(&self, other: &Geo) -> bool {
-        self.does_collide(other) | self.contains(self.get_origin())
+        self.does_collide(other) | self.contains(&self.get_origin())
     }
 
-    pub fn close_to(&self, pos: P2, max_distance: Float) -> bool {
+    pub fn close_to(&self, pos: &P2, max_distance: Float) -> bool {
         match self {
             Geo::GeoRect(rect) => rect.contains(pos),
             Geo::GeoCircle(circle) => circle.contains(pos),
@@ -129,22 +353,22 @@ impl Geo {
             (Geo::GeoRect(r1), Geo::GeoCircle(c2)) => r1.does_collide(c2),
             (Geo::GeoRect(r1), Geo::GeoRay(ray1)) => ray1.does_collide(r1),
             (Geo::GeoRect(r1), Geo::GeoLineSegment(ls2)) => r1.does_collide(ls2),
-            (Geo::GeoRect(r1), Geo::GeoPoint(p2)) => r1.contains(*p2),
+            (Geo::GeoRect(r1), Geo::GeoPoint(p2)) => r1.contains(p2),
             (Geo::GeoRect(r1), Geo::GeoMCircle(mc)) => mc.reflect_on(r1).is_some(),
             (Geo::GeoCircle(c1), Geo::GeoCircle(c2)) => c1.intersect(c2).is_some(),
             (Geo::GeoCircle(c1), Geo::GeoRay(ray)) => ray.does_collide(c1),
             (Geo::GeoCircle(c1), Geo::GeoLineSegment(ls2)) => c1.intersect(ls2).is_some(),
-            (Geo::GeoCircle(c1), Geo::GeoPoint(p2)) => c1.contains(*p2),
+            (Geo::GeoCircle(c1), Geo::GeoPoint(p2)) => c1.contains(p2),
             (Geo::GeoCircle(c1), Geo::GeoMCircle(mc)) => {
                 mc.path.distance(&c1.origin) < mc.radius + c1.radius
             }
             (Geo::GeoLineSegment(ls), Geo::GeoRay(ray)) => ray.does_collide(ls),
             (Geo::GeoLineSegment(ls1), Geo::GeoLineSegment(ls2)) => ls1.intersect(ls2).is_some(),
-            (Geo::GeoLineSegment(ls), Geo::GeoPoint(p2)) => ls.distance(p2) < 0.000_001,
+            (Geo::GeoLineSegment(ls), Geo::GeoPoint(p2)) => ls.distance(p2) < EPSILON,
             (Geo::GeoLineSegment(ls), Geo::GeoMCircle(mc)) => mc.reflect_on(ls).is_some(),
-            (Geo::GeoPoint(p), Geo::GeoRay(ray)) => ray.distance(&p) < 0.000_001,
+            (Geo::GeoPoint(p), Geo::GeoRay(ray)) => ray.distance(&p) < EPSILON,
             (Geo::GeoPoint(p1), Geo::GeoPoint(p2)) => p1 == p2,
-            (Geo::GeoPoint(p), Geo::GeoMCircle(mc)) => mc.contains(*p),
+            (Geo::GeoPoint(p), Geo::GeoMCircle(mc)) => mc.contains(p),
             (Geo::GeoMCircle(mc), Geo::GeoRay(ray)) => ray.does_collide(mc),
             (Geo::GeoMCircle(mc1), Geo::GeoMCircle(mc2)) => mc1.reflect_on(mc2).is_some(),
             (Geo::GeoRay(ray1), Geo::GeoRay(ray2)) => ray1.does_collide(ray2),
@@ -238,15 +462,29 @@ impl HasOrigin for Geo {
 }
 
 impl Contains for Geo {
-    fn contains(&self, p: P2) -> bool {
+    fn contains(&self, p: &P2) -> bool {
         match self {
             Geo::GeoRect(geo) => geo.contains(p),
             Geo::GeoCircle(geo) => geo.contains(p),
-            Geo::GeoRay(geo) => geo.distance(&p) < 0.00001,
-            Geo::GeoLineSegment(geo) => geo.distance(&p) < 0.00001,
-            Geo::GeoPoint(geo) => *geo == p,
+            Geo::GeoRay(geo) => geo.distance(&p) < EPSILON,
+            Geo::GeoLineSegment(geo) => geo.distance(&p) < EPSILON,
+            Geo::GeoPoint(geo) => geo == p,
             Geo::GeoMCircle(geo) => geo.contains(p),
             Geo::GeoLogic(geo) => geo.contains(p),
+        }
+    }
+}
+
+impl ClosestPoint for Geo {
+    fn closest_point_to(&self, p: &P2) -> P2 {
+        match self {
+            Geo::GeoRect(geo) => geo.closest_point_to(p),
+            Geo::GeoCircle(geo) => geo.closest_point_to(p),
+            Geo::GeoRay(geo) => geo.closest_point_to(p),
+            Geo::GeoLineSegment(geo) => geo.closest_point_to(p),
+            Geo::GeoPoint(geo) => *geo,
+            Geo::GeoMCircle(geo) => geo.closest_point_to(p),
+            Geo::GeoLogic(geo) => geo.closest_point_to(p),
         }
     }
 }
@@ -348,5 +586,158 @@ impl From<MCircle> for Geo {
 impl From<LineSegment> for Geo {
     fn from(ls: LineSegment) -> Self {
         Geo::GeoLineSegment(ls)
+    }
+}
+
+impl Intersect<Ray> for Geo {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, ray: &Ray) -> Option<Self::Intersection> {
+        match self {
+            Geo::GeoPoint(p) => {
+                if ray.distance(p) < EPSILON {
+                    Some(vec![*p])
+                } else {
+                    None
+                }
+            }
+            Geo::GeoRay(r) => r.intersect(ray).map(|p| vec![p]),
+            Geo::GeoLineSegment(ls) => ls.intersect(ray).map(|p| vec![p]),
+            Geo::GeoRect(r) => r.intersect(ray).map(|oot| {
+                if let Some(p2) = oot.get_second() {
+                    vec![oot.get_first(), p2]
+                } else {
+                    vec![oot.get_first()]
+                }
+            }),
+            Geo::GeoCircle(c) => ray.intersect(c).map(|p| vec![p]),
+            Geo::GeoMCircle(mc) => ray.intersect(mc).map(|p| vec![p]),
+            Geo::GeoLogic(l) => ray.intersect(l).map(|(p, _)| vec![p]),
+        }
+    }
+}
+
+impl Intersect<LineSegment> for Geo {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, line_segment: &LineSegment) -> Option<Self::Intersection> {
+        match self {
+            Geo::GeoPoint(p) => {
+                if line_segment.distance(p) < EPSILON {
+                    Some(vec![*p])
+                } else {
+                    None
+                }
+            }
+            Geo::GeoRay(r) => r.intersect(line_segment).map(|p| vec![p]),
+            Geo::GeoLineSegment(ls) => ls.intersect(line_segment).map(|p| vec![p]),
+            Geo::GeoRect(r) => r.intersect(line_segment).map(|oot| oot.into_vec()),
+            Geo::GeoCircle(c) => c.intersect(line_segment).map(|oot| oot.into_vec()),
+            Geo::GeoMCircle(mc) => mc.intersect(line_segment).map(|oot| oot.into_vec()),
+            Geo::GeoLogic(l) => l.intersect(line_segment),
+        }
+    }
+}
+
+impl Intersect<Rect> for Geo {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, rect: &Rect) -> Option<Self::Intersection> {
+        match self {
+            Geo::GeoPoint(p) => {
+                if rect.distance(p) < EPSILON {
+                    Some(vec![*p])
+                } else {
+                    None
+                }
+            }
+            Geo::GeoRay(r) => r.intersect(rect).map(|p| vec![p]),
+            Geo::GeoLineSegment(ls) => rect.intersect(ls).map(|oot| oot.into_vec()),
+            Geo::GeoRect(r) => r.intersect(rect),
+            Geo::GeoCircle(c) => rect.intersect(c),
+            Geo::GeoMCircle(mc) => mc.intersect(rect),
+            Geo::GeoLogic(l) => l.intersect(rect),
+        }
+    }
+}
+
+impl Intersect<Circle> for Geo {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, circle: &Circle) -> Option<Self::Intersection> {
+        match self {
+            Geo::GeoPoint(p) => {
+                if circle.distance(p) < EPSILON {
+                    Some(vec![*p])
+                } else {
+                    None
+                }
+            }
+            Geo::GeoRay(r) => r.intersect(circle).map(|p| vec![p]),
+            Geo::GeoLineSegment(ls) => circle.intersect(ls).map(|oot| oot.into_vec()),
+            Geo::GeoRect(r) => r.intersect(circle),
+            Geo::GeoCircle(c) => circle.intersect(c).map(|oot| oot.into_vec()),
+            Geo::GeoMCircle(mc) => mc.intersect(circle).map(|oot| oot.into_vec()),
+            Geo::GeoLogic(l) => l.intersect(circle),
+        }
+    }
+}
+
+impl Intersect<MCircle> for Geo {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, mcircle: &MCircle) -> Option<Self::Intersection> {
+        match self {
+            Geo::GeoPoint(p) => {
+                if mcircle.distance(p) < EPSILON {
+                    Some(vec![*p])
+                } else {
+                    None
+                }
+            }
+            Geo::GeoRay(r) => r.intersect(mcircle).map(|p| vec![p]),
+            Geo::GeoLineSegment(ls) => mcircle.intersect(ls).map(|oot| oot.into_vec()),
+            Geo::GeoRect(r) => mcircle.intersect(r),
+            Geo::GeoCircle(c) => mcircle.intersect(c).map(|oot| oot.into_vec()),
+            Geo::GeoMCircle(mc) => mc.intersect(mcircle).map(|oot| oot.into_vec()),
+            Geo::GeoLogic(l) => l.intersect(mcircle),
+        }
+    }
+}
+
+impl Intersect<Logic> for Geo {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, logic: &Logic) -> Option<Self::Intersection> {
+        match self {
+            Geo::GeoPoint(p) => {
+                if logic.distance(p) < EPSILON {
+                    Some(vec![*p])
+                } else {
+                    None
+                }
+            }
+            Geo::GeoRay(r) => r.intersect(logic).map(|(p, _)| vec![p]),
+            Geo::GeoLineSegment(ls) => logic.intersect(ls),
+            Geo::GeoRect(r) => logic.intersect(r),
+            Geo::GeoCircle(c) => logic.intersect(c),
+            Geo::GeoMCircle(mc) => logic.intersect(mc),
+            Geo::GeoLogic(l) => l.intersect(logic),
+        }
+    }
+}
+
+impl Intersect<Geo> for Geo {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, geo: &Geo) -> Option<Self::Intersection> {
+        match self {
+            Geo::GeoPoint(p) => {
+                if geo.distance(p) < EPSILON {
+                    Some(vec![*p])
+                } else {
+                    None
+                }
+            }
+            Geo::GeoRay(r) => r.intersect(geo).map(|p| vec![p]),
+            Geo::GeoLineSegment(ls) => geo.intersect(ls),
+            Geo::GeoRect(r) => geo.intersect(r),
+            Geo::GeoCircle(c) => geo.intersect(c),
+            Geo::GeoMCircle(mc) => geo.intersect(mc),
+            Geo::GeoLogic(l) => geo.intersect(l),
+        }
     }
 }
