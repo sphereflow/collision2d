@@ -145,14 +145,14 @@ impl Scale for Circle {
 }
 
 impl Contains for Circle {
-    fn contains(&self, p: P2) -> bool {
-        distance(&self.origin, &p) <= self.radius
+    fn contains(&self, p: &P2) -> bool {
+        distance(&self.origin, p) <= self.radius
     }
 }
 
 impl ClosestPoint for Circle {
     fn closest_point_to(&self, p: &P2) -> P2 {
-        if *p == self.origin {
+        if p == &self.origin {
             // any point on the outline suffices
             p + V2::new(1., 0.) * self.radius
         } else {
