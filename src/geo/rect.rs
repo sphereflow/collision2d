@@ -151,6 +151,13 @@ impl Rect {
     }
 }
 
+impl Intersect<Ray> for Rect {
+    type Intersection = P2;
+    fn intersect(&self, ray: &Ray) -> Option<P2> {
+        ray.intersect(self)
+    }
+}
+
 impl Intersect<LineSegment> for Rect {
     type Intersection = OneOrTwo<P2>;
     fn intersect(&self, ls: &LineSegment) -> Option<OneOrTwo<P2>> {
@@ -230,14 +237,14 @@ impl Scale for Rect {
 }
 
 impl Contains for Rect {
-    fn contains(&self, p: P2) -> bool {
+    fn contains(&self, p: &P2) -> bool {
         let rot = Rotation2::rotation_between(&self.x_axis, &Vector2::new(1.0, 0.0));
         AABB {
             origin: Point2::new(0.0, 0.0),
             width: self.width,
             height: self.height,
         }
-        .contains(rot * Point2::from(p - self.origin))
+        .contains(&(rot * Point2::from(p - self.origin)))
     }
 }
 
@@ -263,7 +270,7 @@ impl Distance for Rect {
                 min_dist = dist;
             }
         }
-        if self.contains(*p) {
+        if self.contains(p) {
             -min_dist
         } else {
             min_dist
