@@ -6,15 +6,34 @@ pub type P2 = Point2<Float>;
 pub type V2 = Vector2<Float>;
 pub type U2 = Unit<V2>;
 pub type Normal = Unit<V2>;
+pub const EPSILON: Float = 0.000_001;
 
 pub struct OneOrTwo<T: Copy + Clone> {
     items: (T, Option<T>),
+    iter_ix: usize,
 }
 
 impl<T: Copy + Clone> OneOrTwo<T> {
     pub fn new(item: T) -> OneOrTwo<T> {
         OneOrTwo {
             items: (item, None),
+            iter_ix: 0,
+        }
+    }
+
+    pub fn to_vec(&self) -> Vec<T> {
+        if let Some(item_b) = self.items.1 {
+            vec![self.items.0, item_b]
+        } else {
+            vec![self.items.0]
+        }
+    }
+
+    pub fn into_vec(self) -> Vec<T> {
+        if let Some(item_b) = self.items.1 {
+            vec![self.items.0, item_b]
+        } else {
+            vec![self.items.0]
         }
     }
 
@@ -57,6 +76,19 @@ impl<T: Copy + Clone> OneOrTwo<T> {
     }
 }
 
+impl<T: Copy + Clone> Iterator for OneOrTwo<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        let res = match self.iter_ix {
+            0 => Some(self.items.0),
+            1 => self.items.1,
+            _ => None,
+        };
+        self.iter_ix += 1;
+        res
+    }
+}
+
 pub fn between(num: Float, a: Float, b: Float) -> bool {
     (num >= a) && (num <= b)
 }
@@ -76,7 +108,8 @@ pub fn smallest_positive_value(a: Float, b: Float) -> Option<Float> {
 }
 
 pub enum Which {
-  A, B 
+    A,
+    B,
 }
 
 pub fn nearest_option(p: &P2, oa: &Option<P2>, ob: &Option<P2>) -> Option<(P2, Which)> {
