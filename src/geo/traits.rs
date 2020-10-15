@@ -18,7 +18,7 @@ pub trait HasOrigin {
 
 /// wether a shape contains a point
 pub trait Contains {
-    fn contains(&self, p: P2) -> bool;
+    fn contains(&self, p: &P2) -> bool;
 }
 
 /// trait for distances between Points and other primitives
