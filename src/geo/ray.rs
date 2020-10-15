@@ -42,7 +42,7 @@ impl Ray {
 
     pub fn offset(self) -> Self {
         Ray {
-            origin: self.origin + 0.000001 * self.direction.into_inner(),
+            origin: self.origin + EPSILON * self.direction.into_inner(),
             direction: self.direction,
             normal: self.normal,
         }
@@ -414,7 +414,9 @@ impl Intersect<Logic> for Ray {
     fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
         let a = l.get_a();
         let b = l.get_b();
-        let is_inside = l.contains(self.origin);
+        let is_inside = l.contains(&self.origin);
+        let ac = a.contains(&self.origin);
+        let bc = b.contains(&self.origin);
         let isa = self.intersect(&a);
         let isb = self.intersect(&b);
         let match_ab = |(p, w): (P2, Which)| match w {
@@ -425,17 +427,21 @@ impl Intersect<Logic> for Ray {
             LogicOp::And => {
                 if is_inside {
                     nearest_option(&self.origin, &isa, &isb).map(match_ab)
+                } else if ac {
+                    isb.map(|i| (i, b))
+                } else if bc {
+                    isa.map(|i| (i, a))
                 } else {
                     farthest_option(&self.origin, &isa, &isb).and_then(|(p, w)| match w {
                         Which::A => {
-                            if b.contains(p) {
+                            if b.contains(&p) {
                                 Some((p, a))
                             } else {
                                 None
                             }
                         }
                         Which::B => {
-                            if a.contains(p) {
+                            if a.contains(&p) {
                                 Some((p, b))
                             } else {
                                 None
@@ -452,7 +458,7 @@ impl Intersect<Logic> for Ray {
                 }
             }
             LogicOp::AndNot => {
-                if b.contains(self.origin) {
+                if b.contains(&self.origin) {
                     isb.map(|p| (p, b))
                 } else {
                     nearest_option(&self.origin, &isa, &isb).map(match_ab)
