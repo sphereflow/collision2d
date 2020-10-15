@@ -118,7 +118,7 @@ impl HasOrigin for AABB {
 }
 
 impl Contains for AABB {
-    fn contains(&self, p: P2) -> bool {
+    fn contains(&self, p: &P2) -> bool {
         let trans = p - self.origin;
         Float::abs(trans.x) < (self.width * 0.5) && Float::abs(trans.y) < (self.height * 0.5)
     }
