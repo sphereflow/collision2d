@@ -19,7 +19,7 @@ mod tests {
             for j in 1..=1000 {
                 let val = j as Float / 1000.0;
                 // println!("val: {}, min_r: {}, gl: {}", val, min_r, to_global(min_r, to_local(min_r, val)));
-                assert!((to_global(min_r, to_local(min_r, val)) - val).abs() < 0.0001);
+                assert!((to_global(min_r, to_local(min_r, val)) - val).abs() < EPSILON);
             }
         }
     }
@@ -30,7 +30,7 @@ mod tests {
             let min_r = i as Float / 1000.0;
             for j in 1..=1000 {
                 let val = j as Float / 1000.0;
-                assert!((to_local(min_r, to_global(min_r, val)) - val).abs() < 0.001);
+                assert!((to_local(min_r, to_global(min_r, val)) - val).abs() < EPSILON);
             }
         }
     }
@@ -60,6 +60,143 @@ impl MCircle {
         let new_a = self.path.get_b();
         self.min_r = 0.0;
         self.path = LineSegment::from_ab(new_a, new_a + self.speed_vector * frame_time);
+    }
+
+    pub fn circle_a(&self) -> Circle {
+        Circle {
+            radius: self.radius,
+            origin: self.path.get_a(),
+        }
+    }
+
+    pub fn circle_b(&self) -> Circle {
+        Circle {
+            radius: self.radius,
+            origin: self.path.get_b(),
+        }
+    }
+}
+
+impl Intersect<LineSegment> for MCircle {
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, ls: &LineSegment) -> Option<Self::Intersection> {
+        let mut lsa = self.path;
+        lsa.shift(self.path.get_normal().into_inner() * self.radius);
+        let mut lsb = self.path;
+        lsb.shift(self.path.get_normal().into_inner() * self.radius);
+        let ca = self.circle_a();
+        let cb = self.circle_b();
+        // collect all intersection points
+        // ok Rust you have no monadic do built in for Option let the type checker bleed
+        // emulate it with iterators and flatten in between
+        let points = ca
+            .intersect(ls)
+            .into_iter()
+            .flatten()
+            .chain(cb.intersect(ls).into_iter().flatten())
+            .chain(lsa.intersect(ls).into_iter())
+            .chain(lsb.intersect(ls).into_iter());
+        let mut res: Option<OneOrTwo<P2>> = None;
+        for p in points {
+            // check wether point is on perimeter
+            if self.distance(&p).abs() < EPSILON {
+                // add the point to the result
+                if let Some(oot) = res.as_mut() {
+                    oot.add(p);
+                    break;
+                } else {
+                    res = Some(OneOrTwo::new(p));
+                }
+            }
+        }
+        res
+    }
+}
+
+impl Intersect<Rect> for MCircle {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, rect: &Rect) -> Option<Self::Intersection> {
+        let mut res = Vec::new();
+        for ls in rect.line_segments().iter() {
+            if let Some(oot) = self.intersect(ls) {
+                res.extend(oot.into_vec());
+            }
+        }
+        if !res.is_empty() {
+            Some(res)
+        } else {
+            None
+        }
+    }
+}
+
+impl Intersect<Circle> for MCircle {
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, circle: &Circle) -> Option<Self::Intersection> {
+        let mut lsa = self.path;
+        lsa.shift(self.path.get_normal().into_inner() * self.radius);
+        let mut lsb = self.path;
+        lsb.shift(self.path.get_normal().into_inner() * self.radius);
+        let ca = self.circle_a();
+        let cb = self.circle_b();
+        // collect all intersection points
+        // ok Rust you have no monadic do built in for Option let the type checker bleed
+        // emulate it with iterators and flatten in between
+        let points = ca
+            .intersect(circle)
+            .into_iter()
+            .chain(circle.intersect(&cb).into_iter())
+            .chain(circle.intersect(&lsa).into_iter())
+            .chain(circle.intersect(&lsb).into_iter()).flat_map(|oot| oot.into_iter());
+        let mut res: Option<OneOrTwo<P2>> = None;
+        for p in points {
+            // check wether point is on perimeter
+            if self.distance(&p).abs() < EPSILON {
+                // add the point to the result
+                if let Some(oot) = res.as_mut() {
+                    oot.add(p);
+                    break;
+                } else {
+                    res = Some(OneOrTwo::new(p));
+                }
+            }
+        }
+        res
+    }
+}
+
+impl Intersect<MCircle> for MCircle {
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, mcircle: &MCircle) -> Option<Self::Intersection> {
+        let mut lsa = self.path;
+        lsa.shift(self.path.get_normal().into_inner() * self.radius);
+        let mut lsb = self.path;
+        lsb.shift(self.path.get_normal().into_inner() * self.radius);
+        let ca = self.circle_a();
+        let cb = self.circle_b();
+        // collect all intersection points
+        // ok Rust you have no monadic do built in for Option let the type checker bleed
+        // emulate it with iterators and flatten in between
+        let points = mcircle
+            .intersect(&ca)
+            .into_iter()
+            .chain(mcircle.intersect(&cb).into_iter())
+            .chain(mcircle.intersect(&lsa).into_iter())
+            .chain(mcircle.intersect(&lsb).into_iter()).flat_map(|oot| oot.into_iter());
+        let mut res: Option<OneOrTwo<P2>> = None;
+        for p in points {
+            // check wether point is on perimeter
+            if self.distance(&p).abs() < EPSILON {
+                // add the point to the result
+                if let Some(oot) = res.as_mut() {
+                    oot.add(p);
+                    break;
+                } else {
+                    res = Some(OneOrTwo::new(p));
+                }
+            }
+        }
+        res
     }
 }
 
@@ -259,7 +396,7 @@ impl ReflectOn<Rect> for MCircle {
             let mut small_rect: Rect = *rect;
             small_rect.width -= 2. * self.radius;
             small_rect.height -= 2. * self.radius;
-            inside = small_rect.contains(self.path.get_a());
+            inside = small_rect.contains(&self.path.get_a());
         }
 
         if inside {
@@ -331,7 +468,7 @@ impl ReflectOn<AABB> for MCircle {
 }
 
 impl ReflectOn<MCircle> for MCircle {
-    // this does a 2 dimensional elastic collision (not considering rotation)
+    /// this does a 2 dimensional elastic collision (not considering rotation)
     fn reflect_on_normal(&self, other: &MCircle) -> Option<(MCircle, V2)> {
         let mut sa = self.path.get_a();
         let mut oa = other.path.get_a();
@@ -428,8 +565,8 @@ impl HasOrigin for MCircle {
 }
 
 impl Contains for MCircle {
-    fn contains(&self, p: P2) -> bool {
-        self.path.distance(&p) < self.radius
+    fn contains(&self, p: &P2) -> bool {
+        self.path.distance(p) < self.radius
     }
 }
 
