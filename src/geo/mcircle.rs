@@ -519,7 +519,7 @@ impl ReflectOn<MCircle> for MCircle {
                 let other_intersection_point = other_path.eval_at_r(to_local(self.min_r, gr));
                 let diff = intersection_point - other_intersection_point;
                 let mass_ratio = 2.0 * other.weight / (self.weight + other.weight);
-                let deflection_v = self.path.get_direction()
+                let deflection_v = (self.path.get_b() - self.path.get_a())
                     - mass_ratio * diff * (diff.dot(&dd) / diff.norm_squared());
                 let diff_v = self.speed_vector - other.speed_vector;
                 let new_speed_v = self.speed_vector

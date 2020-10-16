@@ -80,7 +80,7 @@ impl From<&LineSegment> for Line {
     fn from(ls: &LineSegment) -> Line {
         Line {
             origin: ls.get_a(),
-            direction: Unit::new_normalize(ls.get_direction()),
+            direction: ls.get_direction(),
             normal: ls.get_normal(),
         }
     }
@@ -168,7 +168,7 @@ impl ReflectOn<Ray> for Line {
 
 impl ReflectOn<LineSegment> for Line {
     fn reflect_on_normal_intersect(&self, other: &LineSegment) -> Option<(Self, V2, P2)> {
-        let dmat = Matrix2::from_columns(&[self.direction.into_inner(), -other.get_direction()]);
+        let dmat = Matrix2::from_columns(&[self.direction.into_inner(), -other.get_direction().into_inner()]);
         match inverse(&dmat) {
             Some(inv) => {
                 let n = other.get_normal().into_inner();

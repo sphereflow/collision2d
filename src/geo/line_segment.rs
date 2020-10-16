@@ -11,12 +11,12 @@ pub struct LineSegment {
     a: P2,
     b: P2,
     normal: Normal,
-    direction: V2,
+    direction: U2,
 }
 
 impl LineSegment {
     pub fn from_ab(a: P2, b: P2) -> LineSegment {
-        let direction = b - a;
+        let direction = Unit::new_normalize(b - a);
         let normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
         LineSegment {
             a,
@@ -32,7 +32,7 @@ impl LineSegment {
 
     pub fn set_a(&mut self, a: P2) {
         self.a = a;
-        self.direction = self.b - self.a;
+        self.direction = Unit::new_normalize(self.b - self.a);
         self.normal = Unit::new_normalize(Vector2::new(-self.direction.y, self.direction.x));
     }
 
@@ -43,7 +43,7 @@ impl LineSegment {
 
     pub fn set_b(&mut self, b: P2) {
         self.b = b;
-        self.direction = self.b - self.a;
+        self.direction = Unit::new_normalize(self.b - self.a);
         self.normal = Unit::new_normalize(Vector2::new(-self.direction.y, self.direction.x));
     }
 
@@ -55,20 +55,20 @@ impl LineSegment {
         self.normal
     }
 
-    pub fn get_direction(&self) -> V2 {
+    pub fn get_direction(&self) -> U2 {
         self.direction
     }
 
     pub fn set_direction(&mut self, direction: V2) {
         self.b = self.a + direction;
-        self.direction = direction;
+        self.direction = Unit::new_normalize(direction);
         // normal is rotated counter clockwise
         self.normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x))
     }
 
     pub fn shorten_towards_b(&mut self, factor: Float) {
-        self.a += self.direction * (1.0 - factor);
-        self.direction = self.b - self.a;
+        let ab = self.b - self.a;
+        self.a += ab * (1.0 - factor);
     }
 
     pub fn length(&self) -> Float {
@@ -76,7 +76,8 @@ impl LineSegment {
     }
 
     pub fn eval_at_r(&self, r: Float) -> P2 {
-        self.a + r * self.direction
+        let ab = self.a - self.b;
+        self.a + r * ab
     }
 }
 
@@ -95,9 +96,10 @@ impl HasOrigin for LineSegment {
 impl Scale for LineSegment {
     /// scales while a stays fixed
     fn scale(&mut self, scale_x: Float, scale_y: Float) {
-        self.direction.x *= scale_x;
-        self.direction.y *= scale_y;
-        self.b = self.a + self.direction;
+        let mut ab = self.b - self.a;
+        ab.x *= scale_x;
+        ab.y *= scale_y;
+        self.b = self.a + ab;
     }
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
         self.a.scale_position(scale_x, scale_y);

@@ -335,8 +335,9 @@ impl Intersect<LineSegment> for Ray {
     type Intersection = P2;
     fn intersect(&self, other: &LineSegment) -> Option<P2> {
         let oline: Line = other.into();
+        let length = (other.get_b() - other.get_a()).norm();
         if let Some((v, r, s)) = self.to_line().intersect(&oline) {
-            if r < 0.0 || s < 0.0 || s > 1.0 {
+            if r < 0.0 || s < 0.0 || s > length {
                 None
             } else {
                 Some(v)
@@ -428,9 +429,9 @@ impl Intersect<Logic> for Ray {
                 if is_inside {
                     nearest_option(&self.origin, &isa, &isb).map(match_ab)
                 } else if ac {
-                    isb.map(|i| (i, b))
+                    isb.filter(|i| a.contains(i)).map(|i| (i, b))
                 } else if bc {
-                    isa.map(|i| (i, a))
+                    isa.filter(|i| b.contains(i)).map(|i| (i, a))
                 } else {
                     farthest_option(&self.origin, &isa, &isb).and_then(|(p, w)| match w {
                         Which::A => {
