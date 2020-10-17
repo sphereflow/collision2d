@@ -141,14 +141,14 @@ impl Distance for Logic {
             LogicOp::Or => da.min(db),
             LogicOp::AndNot => {
                 if a.contains(p) {
-                  res = da.min(-db);
+                    res = da.min(-db);
                 }
                 if let Some(intersection_points) = a.intersect(&b) {
                     for i in intersection_points {
-                      let dip = distance(&i, p);
-                      if dip < da {
-                        res = dip;
-                      }
+                        let dip = distance(&i, p);
+                        if dip < da {
+                            res = dip;
+                        }
                     }
                     res
                 } else {
@@ -407,6 +407,22 @@ impl Geo {
             }
             (_, _) => other.time_of_collision(self),
         }
+    }
+
+    pub fn and_not(self, rhs: Self) -> Geo {
+        let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
+        let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
+        let mut a = Box::new(self);
+        let mut b = Box::new(rhs);
+        a.set_origin(origin - vdir);
+        b.set_origin(origin + vdir);
+        Geo::GeoLogic(Logic {
+            a,
+            b,
+            origin,
+            op: LogicOp::AndNot,
+            x_axis: V2::new(1., 0.),
+        })
     }
 }
 
