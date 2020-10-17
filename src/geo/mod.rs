@@ -32,7 +32,7 @@ pub struct Logic {
     x_axis: V2,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum LogicOp {
     And,
     Or,
