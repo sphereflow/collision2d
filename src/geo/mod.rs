@@ -78,9 +78,9 @@ impl Scale for Logic {
 impl Contains for Logic {
     fn contains(&self, p: &P2) -> bool {
         match self.op {
-            LogicOp::And => self.get_a().contains(p) & self.get_b().contains(p),
-            LogicOp::Or => self.get_a().contains(p) | self.get_b().contains(p),
-            LogicOp::AndNot => self.get_a().contains(p) & !self.get_b().contains(p),
+            LogicOp::And => self.get_a().contains(p) && self.get_b().contains(p),
+            LogicOp::Or => self.get_a().contains(p) || self.get_b().contains(p),
+            LogicOp::AndNot => self.get_a().contains(p) && !self.get_b().contains(p),
         }
     }
 }
