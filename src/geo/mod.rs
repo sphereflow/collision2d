@@ -409,11 +409,11 @@ impl Geo {
         }
     }
 
-    pub fn and_not(self, rhs: Self) -> Geo {
-        let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
-        let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
+    pub fn and_not(self, not: Self) -> Geo {
+        let origin = (not.get_origin() + self.get_origin().coords) * 0.5;
+        let vdir = (not.get_origin() - self.get_origin()) * 0.5;
         let mut a = Box::new(self);
-        let mut b = Box::new(rhs);
+        let mut b = Box::new(not);
         a.set_origin(origin - vdir);
         b.set_origin(origin + vdir);
         Geo::GeoLogic(Logic {
