@@ -410,12 +410,12 @@ impl Geo {
     }
 
     pub fn and_not(self, not: Self) -> Geo {
-        let origin = (not.get_origin() + self.get_origin().coords) * 0.5;
         let vdir = (not.get_origin() - self.get_origin()) * 0.5;
+        let origin = self.get_origin() + vdir;
         let mut a = Box::new(self);
         let mut b = Box::new(not);
-        a.set_origin(origin - vdir);
-        b.set_origin(origin + vdir);
+        a.set_origin(P2::from(-vdir));
+        b.set_origin(P2::from(vdir));
         Geo::GeoLogic(Logic {
             a,
             b,
@@ -539,12 +539,12 @@ impl Distribution<Geo> for Standard {
 impl BitAnd for Geo {
     type Output = Self;
     fn bitand(self, rhs: Self) -> Self::Output {
-        let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
         let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
+        let origin = self.get_origin() + vdir;
         let mut a = Box::new(self);
         let mut b = Box::new(rhs);
-        a.set_origin(origin - vdir);
-        b.set_origin(origin + vdir);
+        a.set_origin(P2::from(-vdir));
+        b.set_origin(P2::from(vdir));
         Geo::GeoLogic(Logic {
             a,
             b,
@@ -558,12 +558,12 @@ impl BitAnd for Geo {
 impl BitOr for Geo {
     type Output = Self;
     fn bitor(self, rhs: Self) -> Self::Output {
-        let origin = (rhs.get_origin() + self.get_origin().coords) * 0.5;
         let vdir = (rhs.get_origin() - self.get_origin()) * 0.5;
+        let origin = self.get_origin() + vdir;
         let mut a = Box::new(self);
         let mut b = Box::new(rhs);
-        a.set_origin(origin - vdir);
-        b.set_origin(origin + vdir);
+        a.set_origin(P2::from(-vdir));
+        b.set_origin(P2::from(vdir));
         Geo::GeoLogic(Logic {
             a,
             b,
