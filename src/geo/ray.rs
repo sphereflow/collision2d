@@ -283,7 +283,7 @@ impl ReflectOn<AABB> for Ray {
 impl ReflectOn<Logic> for Ray {
     fn reflect_on_normal_intersect(&self, l: &Logic) -> Option<(Self, V2, P2)> {
         self.intersect(l)
-            .and_then(|(_, which)| self.reflect_on_normal_intersect(&which))
+            .and_then(|(_, _, which)| self.reflect_on_normal_intersect(&which))
     }
 }
 
@@ -349,12 +349,23 @@ impl Intersect<LineSegment> for Ray {
 }
 
 impl Intersect<Circle> for Ray {
-    type Intersection = P2;
-    fn intersect(&self, circle: &Circle) -> Option<P2> {
-        circle
-            .intersect(&self.to_line())
-            .map(|(r, s)| smallest_positive_value(r, s).map(|r| self.eval_at_r(r)))
-            .flatten()
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, circle: &Circle) -> Option<OneOrTwo<P2>> {
+        if let Some((r, s)) = circle.intersect(&self.to_line()) {
+            if r > 0. && s > 0. {
+                let mut res = OneOrTwo::new(self.eval_at_r(r));
+                res.add(self.eval_at_r(s));
+                Some(res)
+            } else if r > 0. {
+                Some(OneOrTwo::new(self.eval_at_r(r)))
+            } else if s > 0. {
+                Some(OneOrTwo::new(self.eval_at_r(s)))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 }
 
@@ -411,39 +422,35 @@ impl Intersect<AABB> for Ray {
 }
 
 impl Intersect<Logic> for Ray {
-    type Intersection = (P2, Geo);
+    type Intersection = (P2, Vec<P2>, Geo);
     fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
         let a = l.get_a();
         let b = l.get_b();
         let is_inside = l.contains(&self.origin);
-        let ac = a.contains(&self.origin);
-        let bc = b.contains(&self.origin);
-        let isa = self.intersect(&a);
+        let isa: Option<Vec<P2>> = self.intersect(&a);
         let isb = self.intersect(&b);
-        let match_ab = |(p, w): (P2, Which)| match w {
-            Which::A => (p, a.clone()),
-            Which::B => (p, b.clone()),
+        let match_ab = |(p, v, w): (P2, Vec<P2>, Which)| match w {
+            Which::A => (p, v, a.clone()),
+            Which::B => (p, v, b.clone()),
         };
         match l.op {
             LogicOp::And => {
+                let isa = isa.map(|v| v.into_iter().filter(|p| b.contains(p)).collect());
+                let isb = isb.map(|v| v.into_iter().filter(|p| a.contains(p)).collect());
                 if is_inside {
-                    nearest_option(&self.origin, &isa, &isb).map(match_ab)
-                } else if ac {
-                    isb.filter(|i| a.contains(i)).map(|i| (i, b))
-                } else if bc {
-                    isa.filter(|i| b.contains(i)).map(|i| (i, a))
+                    nearest_option(&self.origin, isa, isb).map(match_ab)
                 } else {
-                    farthest_option(&self.origin, &isa, &isb).and_then(|(p, w)| match w {
+                    farthest_option(&self.origin, isa, isb).and_then(|(p, v, w)| match w {
                         Which::A => {
                             if b.contains(&p) {
-                                Some((p, a))
+                                Some((p, v, a))
                             } else {
                                 None
                             }
                         }
                         Which::B => {
                             if a.contains(&p) {
-                                Some((p, b))
+                                Some((p, v, b))
                             } else {
                                 None
                             }
@@ -453,33 +460,31 @@ impl Intersect<Logic> for Ray {
             }
             LogicOp::Or => {
                 if is_inside {
-                    farthest_option(&self.origin, &isa, &isb).map(match_ab)
+                    farthest_option(&self.origin, isa, isb).map(match_ab)
                 } else {
-                    nearest_option(&self.origin, &isa, &isb).map(match_ab)
+                    nearest_option(&self.origin, isa, isb).map(match_ab)
                 }
             }
             LogicOp::AndNot => {
-                if b.contains(&self.origin) {
-                    isb.map(|p| (p, b))
-                } else {
-                    nearest_option(&self.origin, &isa, &isb).map(match_ab)
-                }
+                let isb = isb.map(|v| v.into_iter().filter(|p| a.contains(p)).collect());
+                let isa = isa.map(|v| v.into_iter().filter(|p| !b.contains(p)).collect());
+                nearest_option(&self.origin, isa, isb).map(match_ab)
             }
         }
     }
 }
 
 impl Intersect<Geo> for Ray {
-    type Intersection = P2;
+    type Intersection = Vec<P2>;
     fn intersect(&self, other: &Geo) -> Option<Self::Intersection> {
         match other {
-            Geo::GeoRay(ray) => self.intersect(ray),
-            Geo::GeoRect(rect) => self.intersect(rect),
-            Geo::GeoLineSegment(ls) => self.intersect(ls),
-            Geo::GeoCircle(c) => self.intersect(c),
-            Geo::GeoMCircle(mc) => self.intersect(mc),
+            Geo::GeoRay(ray) => self.intersect(ray).map(|p| vec![p]),
+            Geo::GeoRect(rect) => self.intersect(rect).map(|p| vec![p]),
+            Geo::GeoLineSegment(ls) => self.intersect(ls).map(|p| vec![p]),
+            Geo::GeoCircle(c) => self.intersect(c).map(|oot| oot.into_vec()),
+            Geo::GeoMCircle(mc) => self.intersect(mc).map(|p| vec![p]),
             Geo::GeoPoint(_) => None,
-            Geo::GeoLogic(l) => self.intersect(l).map(|(p, _)| p),
+            Geo::GeoLogic(l) => self.intersect(l).map(|(_nearest, v, _geo)| v),
         }
     }
 }

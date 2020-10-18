@@ -619,9 +619,9 @@ impl Intersect<Ray> for Geo {
             Geo::GeoRay(r) => r.intersect(ray).map(|p| vec![p]),
             Geo::GeoLineSegment(ls) => ls.intersect(ray).map(|p| vec![p]),
             Geo::GeoRect(r) => r.intersect(ray).map(|p| vec![p]),
-            Geo::GeoCircle(c) => ray.intersect(c).map(|p| vec![p]),
+            Geo::GeoCircle(c) => ray.intersect(c).map(|oot| oot.into_vec()),
             Geo::GeoMCircle(mc) => ray.intersect(mc).map(|p| vec![p]),
-            Geo::GeoLogic(l) => ray.intersect(l).map(|(p, _)| vec![p]),
+            Geo::GeoLogic(l) => ray.intersect(l).map(|(_nearest, v, _geo)| v),
         }
     }
 }
@@ -679,7 +679,7 @@ impl Intersect<Circle> for Geo {
                     None
                 }
             }
-            Geo::GeoRay(r) => r.intersect(circle).map(|p| vec![p]),
+            Geo::GeoRay(r) => r.intersect(circle).map(|oot| oot.into_vec()),
             Geo::GeoLineSegment(ls) => circle.intersect(ls).map(|oot| oot.into_vec()),
             Geo::GeoRect(r) => r.intersect(circle),
             Geo::GeoCircle(c) => circle.intersect(c).map(|oot| oot.into_vec()),
@@ -721,7 +721,7 @@ impl Intersect<Logic> for Geo {
                     None
                 }
             }
-            Geo::GeoRay(r) => r.intersect(logic).map(|(p, _)| vec![p]),
+            Geo::GeoRay(r) => r.intersect(logic).map(|(_nearest, v, _geo)| v),
             Geo::GeoLineSegment(ls) => logic.intersect(ls),
             Geo::GeoRect(r) => logic.intersect(r),
             Geo::GeoCircle(c) => logic.intersect(c),
@@ -742,7 +742,7 @@ impl Intersect<Geo> for Geo {
                     None
                 }
             }
-            Geo::GeoRay(r) => r.intersect(geo).map(|p| vec![p]),
+            Geo::GeoRay(r) => r.intersect(geo),
             Geo::GeoLineSegment(ls) => geo.intersect(ls),
             Geo::GeoRect(r) => geo.intersect(r),
             Geo::GeoCircle(c) => geo.intersect(c),
