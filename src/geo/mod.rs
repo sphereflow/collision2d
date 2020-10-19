@@ -63,6 +63,15 @@ impl Logic {
     }
 }
 
+impl HasOrigin for Logic {
+  fn get_origin(&self) -> P2 {
+      self.origin
+  }
+  fn set_origin(&mut self, origin: P2) {
+      self.origin = origin;
+  }
+}
+
 impl Scale for Logic {
     fn scale(&mut self, scale_x: Float, scale_y: Float) {
         self.a.scale_position(scale_x, scale_y);
