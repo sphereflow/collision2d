@@ -144,6 +144,13 @@ impl Scale for Circle {
     }
 }
 
+impl Rotate for Circle {
+    fn get_rotation(&self) -> V2 {
+        V2::new(1., 0.)
+    }
+    fn set_rotation(&mut self, _x_axis: &V2) {}
+}
+
 impl Contains for Circle {
     fn contains(&self, p: &P2) -> bool {
         distance(&self.origin, p) <= self.radius
