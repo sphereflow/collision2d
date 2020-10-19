@@ -42,18 +42,18 @@ where
     Self: HasOrigin,
 {
     fn get_rotation(&self) -> V2;
-    fn set_rotation(&mut self, x_axis: V2);
-    fn look_at(&mut self, p: P2) {
-        self.set_rotation(p - self.get_origin());
+    fn set_rotation(&mut self, x_axis: &V2);
+    fn look_at(&mut self, p: &P2) {
+        self.set_rotation(&(p - self.get_origin()));
     }
     /// rotation from local to global
-    fn rotate_point(&self, p: P2) -> P2 {
+    fn rotate_point(&self, p: &P2) -> P2 {
         let x_axis = self.get_rotation();
         let rotation_matrix = Matrix2::new(x_axis.x, -x_axis.y, x_axis.y, x_axis.x);
         rotation_matrix * p
     }
     /// tranformation from local to global
-    fn transform(&self, p: P2) -> P2 {
+    fn transform(&self, p: &P2) -> P2 {
         (self.get_origin().coords + self.rotate_point(p).coords).into()
     }
 }
