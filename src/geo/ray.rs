@@ -384,17 +384,17 @@ impl Intersect<MCircle> for Ray {
 }
 
 impl Intersect<Rect> for Ray {
-    type Intersection = P2;
-    fn intersect(&self, rect: &Rect) -> Option<P2> {
-        let mut closest: Option<P2> = None;
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, rect: &Rect) -> Option<OneOrTwo<P2>> {
+        let mut closest: Option<OneOrTwo<P2>> = None;
         for ls in rect.line_segments().iter() {
             if let Some(v) = self.intersect(ls) {
-                if let Some(cv) = closest {
-                    if distance(&self.origin, &v) < distance(&self.origin, &cv) {
-                        closest = Some(v)
+                if let Some(oot) = closest.as_mut() {
+                    if distance(&self.origin, &v) < distance(&self.origin, &oot.get_first()) {
+                        oot.add(v);
                     }
                 } else {
-                    closest = Some(v);
+                    closest = Some(OneOrTwo::new(v));
                 }
             }
         }
@@ -435,28 +435,9 @@ impl Intersect<Logic> for Ray {
         };
         match l.op {
             LogicOp::And => {
-                let isa = isa.map(|v| v.into_iter().filter(|p| b.contains(p)).collect());
-                let isb = isb.map(|v| v.into_iter().filter(|p| a.contains(p)).collect());
-                if is_inside {
-                    nearest_option(&self.origin, isa, isb).map(match_ab)
-                } else {
-                    farthest_option(&self.origin, isa, isb).and_then(|(p, v, w)| match w {
-                        Which::A => {
-                            if b.contains(&p) {
-                                Some((p, v, a))
-                            } else {
-                                None
-                            }
-                        }
-                        Which::B => {
-                            if a.contains(&p) {
-                                Some((p, v, b))
-                            } else {
-                                None
-                            }
-                        }
-                    })
-                }
+                let isa = isa.map(|va| va.into_iter().filter(|pa| b.contains(pa)).collect());
+                let isb = isb.map(|vb| vb.into_iter().filter(|pb| a.contains(pb)).collect());
+                nearest_option(&self.origin, isa, isb).map(match_ab)
             }
             LogicOp::Or => {
                 if is_inside {
@@ -479,7 +460,7 @@ impl Intersect<Geo> for Ray {
     fn intersect(&self, other: &Geo) -> Option<Self::Intersection> {
         match other {
             Geo::GeoRay(ray) => self.intersect(ray).map(|p| vec![p]),
-            Geo::GeoRect(rect) => self.intersect(rect).map(|p| vec![p]),
+            Geo::GeoRect(rect) => self.intersect(rect).map(|oot| oot.into_vec()),
             Geo::GeoLineSegment(ls) => self.intersect(ls).map(|p| vec![p]),
             Geo::GeoCircle(c) => self.intersect(c).map(|oot| oot.into_vec()),
             Geo::GeoMCircle(mc) => self.intersect(mc).map(|p| vec![p]),

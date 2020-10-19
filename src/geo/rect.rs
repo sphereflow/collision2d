@@ -152,8 +152,8 @@ impl Rect {
 }
 
 impl Intersect<Ray> for Rect {
-    type Intersection = P2;
-    fn intersect(&self, ray: &Ray) -> Option<P2> {
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, ray: &Ray) -> Option<OneOrTwo<P2>> {
         ray.intersect(self)
     }
 }

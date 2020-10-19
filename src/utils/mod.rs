@@ -147,18 +147,17 @@ pub fn nearest_option(
         res.map(|p| (p, v))
     });
 
-    if let Some((a, va)) = oa {
-        if let Some((b, vb)) = ob {
+    match (oa, ob) {
+        (Some((a, va)), Some((b, vb))) => {
             if distance(p, &a) < distance(p, &b) {
                 Some((a, va, Which::A))
             } else {
                 Some((b, vb, Which::B))
             }
-        } else {
-            Some((a, va, Which::A))
         }
-    } else {
-        None
+        (Some((a, va)), None) => Some((a, va, Which::A)),
+        (None, Some((b, vb))) => Some((b, vb, Which::B)),
+        (None, None) => None,
     }
 }
 
@@ -177,7 +176,7 @@ pub fn farthest_option(
                 res = Some(*a);
             }
         }
-        res.map(|p| (p, v))
+        res.map(|a| (a, v))
     });
 
     let ob: Option<(P2, Vec<P2>)> = ovb.and_then(|v| {
@@ -190,21 +189,20 @@ pub fn farthest_option(
                 res = Some(*b);
             }
         }
-        res.map(|p| (p, v))
+        res.map(|b| (b, v))
     });
 
-    if let Some((a, va)) = oa {
-        if let Some((b, vb)) = ob {
+    match (oa, ob) {
+        (Some((a, va)), Some((b, vb))) => {
             if distance(p, &a) > distance(p, &b) {
                 Some((a, va, Which::A))
             } else {
                 Some((b, vb, Which::B))
             }
-        } else {
-            Some((a, va, Which::A))
         }
-    } else {
-        None
+        (Some((a, va)), None) => Some((a, va, Which::A)),
+        (None, Some((b, vb))) => Some((b, vb, Which::B)),
+        (None, None) => None,
     }
 }
 
