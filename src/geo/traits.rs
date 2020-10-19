@@ -16,6 +16,16 @@ pub trait HasOrigin {
     fn set_origin(&mut self, origin: P2);
 }
 
+impl HasOrigin for P2 {
+    fn get_origin(&self) -> P2 {
+        *self
+    }
+    fn set_origin(&mut self, origin: P2) {
+        self.x = origin.x;
+        self.y = origin.y;
+    }
+}
+
 /// wether a shape contains a point
 pub trait Contains {
     fn contains(&self, p: &P2) -> bool;
@@ -56,6 +66,13 @@ where
     fn transform(&self, p: &P2) -> P2 {
         (self.get_origin().coords + self.rotate_point(p).coords).into()
     }
+}
+
+impl Rotate for P2 {
+    fn get_rotation(&self) -> V2 {
+        V2::new(1., 0.)
+    }
+    fn set_rotation(&mut self, _x_axis: &V2) {}
 }
 
 pub trait Scale {
