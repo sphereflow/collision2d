@@ -147,7 +147,8 @@ impl Intersect<Circle> for MCircle {
             .into_iter()
             .chain(circle.intersect(&cb).into_iter())
             .chain(circle.intersect(&lsa).into_iter())
-            .chain(circle.intersect(&lsb).into_iter()).flat_map(|oot| oot.into_iter());
+            .chain(circle.intersect(&lsb).into_iter())
+            .flat_map(|oot| oot.into_iter());
         let mut res: Option<OneOrTwo<P2>> = None;
         for p in points {
             // check wether point is on perimeter
@@ -182,7 +183,8 @@ impl Intersect<MCircle> for MCircle {
             .into_iter()
             .chain(mcircle.intersect(&cb).into_iter())
             .chain(mcircle.intersect(&lsa).into_iter())
-            .chain(mcircle.intersect(&lsb).into_iter()).flat_map(|oot| oot.into_iter());
+            .chain(mcircle.intersect(&lsb).into_iter())
+            .flat_map(|oot| oot.into_iter());
         let mut res: Option<OneOrTwo<P2>> = None;
         for p in points {
             // check wether point is on perimeter
@@ -605,6 +607,15 @@ impl ClosestPoint for MCircle {
 impl Distance for MCircle {
     fn distance(&self, p: &P2) -> Float {
         self.path.distance(p) - self.radius
+    }
+}
+
+impl Rotate for MCircle {
+    fn get_rotation(&self) -> V2 {
+        self.path.get_rotation()
+    }
+    fn set_rotation(&mut self, x_axis: &V2) {
+        self.path.set_rotation(x_axis);
     }
 }
 
