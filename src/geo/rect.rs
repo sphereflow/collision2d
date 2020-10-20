@@ -50,8 +50,7 @@ impl Rect {
     }
 
     pub fn get_y_axis(&self) -> V2 {
-        let xax = self.x_axis.into_inner();
-        Vector2::new(-xax.y, xax.x)
+        Vector2::new(-self.x_axis.y, self.x_axis.x)
     }
 
     pub fn points(&self) -> RectPoints {
@@ -222,6 +221,15 @@ impl HasOrigin for Rect {
     }
     fn set_origin(&mut self, origin: P2) {
         self.origin = origin;
+    }
+}
+
+impl Rotate for Rect {
+    fn get_rotation(&self) -> V2 {
+        self.x_axis.into_inner()
+    }
+    fn set_rotation(&mut self, x_axis: &V2) {
+        self.x_axis = Unit::new_normalize(*x_axis);
     }
 }
 
