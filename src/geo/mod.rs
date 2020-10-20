@@ -15,7 +15,7 @@ pub use circle::*;
 pub use line::*;
 pub use line_segment::*;
 pub use mcircle::*;
-use na::{distance, Matrix2};
+use na::{distance, Matrix2, Unit, Rotation2};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 pub use ray::*;
@@ -64,11 +64,32 @@ impl Logic {
 }
 
 impl HasOrigin for Logic {
-  fn get_origin(&self) -> P2 {
-      self.origin
+    fn get_origin(&self) -> P2 {
+        self.origin
+    }
+    fn set_origin(&mut self, origin: P2) {
+        self.origin = origin;
+    }
+}
+
+impl Rotate for Logic {
+  fn get_rotation(&self) -> V2 {
+      let ab = self.b.get_origin() - self.a.get_origin();
+      V2::new(-ab.y, ab.x)
   }
-  fn set_origin(&mut self, origin: P2) {
-      self.origin = origin;
+  fn set_rotation(&mut self, x_axis: &V2) {
+        let x_axis_old = self.get_rotation();
+        let normal = Unit::new_normalize(*x_axis);
+        // inverse of the old rotation
+        let rot_old_inv = Matrix2::new(x_axis_old.x, x_axis_old.y, -x_axis_old.y, x_axis_old.x);
+        let rot = Matrix2::new(normal.x, -normal.y, normal.y, normal.x);
+        let origin = self.get_origin();
+        let angle = x_axis.angle(&x_axis_old);
+        let ab_rot = Rotation2::new(angle);
+        self.a.set_rotation(&(ab_rot * self.a.get_rotation()));
+        self.b.set_rotation(&(ab_rot * self.b.get_rotation()));
+        self.a.set_origin(origin + (rot * rot_old_inv * self.a.get_origin()).coords);
+        self.b.set_origin(origin + (rot * rot_old_inv * self.b.get_origin()).coords);
   }
 }
 
@@ -528,6 +549,31 @@ impl Distance for Geo {
             }
             .distance(p),
             Geo::GeoLogic(g) => g.distance(p),
+        }
+    }
+}
+
+impl Rotate for Geo {
+    fn get_rotation(&self) -> V2 {
+        match self {
+            Geo::GeoRect(geo) => geo.get_rotation(),
+            Geo::GeoCircle(geo) => geo.get_rotation(),
+            Geo::GeoRay(geo) => geo.get_rotation(),
+            Geo::GeoLineSegment(geo) => geo.get_rotation(),
+            Geo::GeoPoint(geo) => geo.get_rotation(),
+            Geo::GeoMCircle(geo) => geo.get_rotation(),
+            Geo::GeoLogic(geo) => geo.get_rotation(),
+        }
+    }
+    fn set_rotation(&mut self, x_axis: &V2) {
+        match self {
+            Geo::GeoRect(geo) => geo.set_rotation(x_axis),
+            Geo::GeoCircle(geo) => geo.set_rotation(x_axis),
+            Geo::GeoRay(geo) => geo.set_rotation(x_axis),
+            Geo::GeoLineSegment(geo) => geo.set_rotation(x_axis),
+            Geo::GeoPoint(geo) => geo.set_rotation(x_axis),
+            Geo::GeoMCircle(geo) => geo.set_rotation(x_axis),
+            Geo::GeoLogic(geo) => geo.set_rotation(x_axis),
         }
     }
 }
