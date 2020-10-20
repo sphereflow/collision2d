@@ -56,6 +56,10 @@ where
     fn look_at(&mut self, p: &P2) {
         self.set_rotation(&(p - self.get_origin()));
     }
+    fn rotate_point_around_origin(&self, p: &P2) -> P2 {
+        let origin = self.get_origin();
+        self.rotate_point(&P2::from(p - origin)) + origin.coords
+    }
     /// rotation from local to global
     fn rotate_point(&self, p: &P2) -> P2 {
         let x_axis = self.get_rotation();
