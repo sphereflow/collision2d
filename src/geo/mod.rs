@@ -15,7 +15,7 @@ pub use circle::*;
 pub use line::*;
 pub use line_segment::*;
 pub use mcircle::*;
-use na::{distance, Matrix2, Unit, Rotation2};
+use na::{distance, Matrix2, Rotation2};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 pub use ray::*;
@@ -78,18 +78,15 @@ impl Rotate for Logic {
       V2::new(-ab.y, ab.x)
   }
   fn set_rotation(&mut self, x_axis: &V2) {
-        let x_axis_old = self.get_rotation();
-        let normal = Unit::new_normalize(*x_axis);
-        // inverse of the old rotation
-        let rot_old_inv = Matrix2::new(x_axis_old.x, x_axis_old.y, -x_axis_old.y, x_axis_old.x);
-        let rot = Matrix2::new(normal.x, -normal.y, normal.y, normal.x);
-        let origin = self.get_origin();
-        let angle = x_axis.angle(&x_axis_old);
-        let ab_rot = Rotation2::new(angle);
-        self.a.set_rotation(&(ab_rot * self.a.get_rotation()));
-        self.b.set_rotation(&(ab_rot * self.b.get_rotation()));
-        self.a.set_origin(origin + (rot * rot_old_inv * self.a.get_origin()).coords);
-        self.b.set_origin(origin + (rot * rot_old_inv * self.b.get_origin()).coords);
+        let rotation = Rotation2::rotation_between(&self.get_rotation(), x_axis);
+
+        self.a.set_origin(rotation.transform_point(&self.a.get_origin()));
+        let rotation_axis_a = rotation * self.a.get_rotation();
+        self.a.set_rotation(&rotation_axis_a);
+
+        self.b.set_origin(rotation.transform_point(&self.b.get_origin()));
+        let rotation_axis_b = rotation * self.b.get_rotation();
+        self.b.set_rotation(&rotation_axis_b);
   }
 }
 
