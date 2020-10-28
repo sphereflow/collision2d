@@ -94,19 +94,15 @@ impl HasOrigin for LineSegment {
 }
 
 impl Rotate for LineSegment {
+    // self.normal is the x axis ; self.direction is the y_axis
     fn set_rotation(&mut self, x_axis: &V2) {
-        let x_axis_old = self.get_rotation();
         self.normal = Unit::new_normalize(*x_axis);
+        self.direction = Unit::new_unchecked(V2::new(-self.normal.y, self.normal.x));
         // inverse of the old rotation
-        let rot_old_inv = Matrix2::new(x_axis_old.x, x_axis_old.y, -x_axis_old.y, x_axis_old.x);
-        let rot = Matrix2::new(self.normal.x, -self.normal.y, self.normal.y, self.normal.x);
+        let disth = distance(&self.a, &self.b) * 0.5;
         let origin = self.get_origin();
-        // vector from position to a
-        let pa = self.a - origin;
-        // vector from position to b
-        let pb = self.b - origin;
-        self.a = origin + rot * rot_old_inv * pa;
-        self.b = origin + rot * rot_old_inv * pb;
+        self.a = origin - self.direction.into_inner() * disth;
+        self.b = origin + self.direction.into_inner() * disth;
     }
     fn get_rotation(&self) -> V2 {
         self.normal.into_inner()
