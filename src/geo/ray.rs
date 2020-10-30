@@ -66,6 +66,13 @@ impl Ray {
         self.origin + r * self.direction.into_inner()
     }
 
+    pub fn reflect(&self, (i, normal): &(P2, Normal)) -> Self {
+        let n = normal.into_inner();
+        let d = self.direction.into_inner();
+        let r = d - 2. * d.dot(&n) * n;
+        Ray::from_origin(*i, r).offset()
+    }
+
     pub fn refract_on<T>(
         &self,
         surface: &T,
@@ -152,8 +159,8 @@ impl ReflectOn<Line> for Ray {
 impl ReflectOn<Ray> for Ray {
     fn reflect_on_normal_intersect(&self, ray: &Ray) -> Option<(Ray, V2, P2)> {
         match self.intersect(ray) {
-            Some((intersection, _)) => {
-                let mut n = ray.normal.into_inner();
+            Some((intersection, normal)) => {
+                let mut n = normal.into_inner();
                 if n.dot(&self.get_direction()) < 0.0 {
                     n = -n;
                 }
@@ -190,8 +197,8 @@ impl ReflectOn<Ray> for Ray {
 
 impl ReflectOn<LineSegment> for Ray {
     fn reflect_on_normal_intersect(&self, ls: &LineSegment) -> Option<(Self, V2, P2)> {
-        if let Some((i, _)) = self.intersect(ls) {
-            let n = ls.get_normal().into_inner();
+        if let Some((i, normal)) = self.intersect(ls) {
+            let n = normal.into_inner();
             let d = self.direction.into_inner();
             let r = d - 2. * d.dot(&n) * n;
             let ray = Ray::from_origin(i, r).offset();
@@ -282,7 +289,7 @@ impl ReflectOn<AABB> for Ray {
 impl ReflectOn<Logic> for Ray {
     fn reflect_on_normal_intersect(&self, l: &Logic) -> Option<(Self, V2, P2)> {
         self.intersect(l)
-            .and_then(|(_, _, which)| self.reflect_on_normal_intersect(&which))
+            .map(|((p, normal), _)| (self.reflect(&(p, normal)), normal.into_inner(), p))
     }
 }
 
@@ -385,9 +392,13 @@ impl Intersect<MCircle> for Ray {
         };
         circle
             .intersect(&self.to_line())
-            .map(|(r, s)| smallest_positive_value(r, s).map(|r| { let rp = self.eval_at_r(r); let normal_r = Unit::new_normalize(rp - circle.get_origin());
-        (rp, normal_r)
-            }))
+            .map(|(r, s)| {
+                smallest_positive_value(r, s).map(|r| {
+                    let rp = self.eval_at_r(r);
+                    let normal_r = Unit::new_normalize(rp - circle.get_origin());
+                    (rp, normal_r)
+                })
+            })
             .flatten()
     }
 }
@@ -420,10 +431,10 @@ impl Intersect<AABB> for Ray {
                 if let Some((cv, _)) = closest {
                     if distance(&self.origin, &v) < distance(&self.origin, &cv) {
                         closest = Some((v, n));
-                    } 
-                }else {
-                        closest = Some((v, n));
                     }
+                } else {
+                    closest = Some((v, n));
+                }
             }
         }
         closest
@@ -431,34 +442,37 @@ impl Intersect<AABB> for Ray {
 }
 
 impl Intersect<Logic> for Ray {
-    type Intersection = ((P2, Normal), Vec<(P2, Normal)>, Geo);
+    type Intersection = ((P2, Normal), Vec<(P2, Normal)>);
     fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
         let a = l.get_a();
         let b = l.get_b();
         let is_inside = l.contains(&self.origin);
         let isa: Option<Vec<(P2, Normal)>> = self.intersect(&a);
         let isb = self.intersect(&b);
-        let match_ab = |(p, v, w): ((P2, Normal), Vec<(P2, Normal)>, Which)| match w {
-            Which::A => (p, v, a.clone()),
-            Which::B => (p, v, b.clone()),
-        };
         match l.op {
             LogicOp::And => {
-                let isa: Option<Vec<(P2, Normal)>> = isa.map(|va| va.into_iter().filter(|(pa, _)| b.contains(pa)).collect());
-                let isb: Option<Vec<(P2, Normal)>> = isb.map(|vb| vb.into_iter().filter(|(pb, _)| a.contains(pb)).collect());
-                nearest_option(&self.origin, isa, isb).map(match_ab)
+                let isa: Option<Vec<(P2, Normal)>> =
+                    isa.map(|va| va.into_iter().filter(|(pa, _)| b.contains(pa)).collect());
+                let isb: Option<Vec<(P2, Normal)>> =
+                    isb.map(|vb| vb.into_iter().filter(|(pb, _)| a.contains(pb)).collect());
+                nearest_option(&self.origin, isa, isb)
             }
             LogicOp::Or => {
                 if is_inside {
-                    farthest_option(&self.origin, isa, isb).map(match_ab)
+                    farthest_option(&self.origin, isa, isb)
                 } else {
-                    nearest_option(&self.origin, isa, isb).map(match_ab)
+                    nearest_option(&self.origin, isa, isb)
                 }
             }
             LogicOp::AndNot => {
-                let isb = isb.map(|v| v.into_iter().filter(|(p, _)| a.contains(p)).collect());
+                let isb = isb.map(|v| {
+                    v.into_iter()
+                        .map(|(p, n)| (p, -n))
+                        .filter(|(p, _)| a.contains(p))
+                        .collect()
+                });
                 let isa = isa.map(|v| v.into_iter().filter(|(p, _)| !b.contains(p)).collect());
-                nearest_option(&self.origin, isa, isb).map(match_ab)
+                nearest_option(&self.origin, isa, isb)
             }
         }
     }
@@ -474,7 +488,7 @@ impl Intersect<Geo> for Ray {
             Geo::GeoCircle(c) => self.intersect(c).map(|oot| oot.into_vec()),
             Geo::GeoMCircle(mc) => self.intersect(mc).map(|p| vec![p]),
             Geo::GeoPoint(_) => None,
-            Geo::GeoLogic(l) => self.intersect(l).map(|(_nearest, v, _geo)| v),
+            Geo::GeoLogic(l) => self.intersect(l).map(|(_nearest, v)| v),
         }
     }
 }

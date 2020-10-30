@@ -122,16 +122,11 @@ pub fn first<A, B>((a, _): (A, B)) -> A {
     a
 }
 
-pub enum Which {
-    A,
-    B,
-}
-
 pub fn nearest_option(
     p: &P2,
     ova: Option<Vec<(P2, Normal)>>,
     ovb: Option<Vec<(P2, Normal)>>,
-) -> Option<((P2, Normal), Vec<(P2, Normal)>, Which)> {
+) -> Option<((P2, Normal), Vec<(P2, Normal)>)> {
     let oa: Option<((P2, Normal), Vec<(P2, Normal)>)> = ova.and_then(|v| {
         let mut min_distance = Float::MAX;
         let mut res = None;
@@ -161,13 +156,13 @@ pub fn nearest_option(
     match (oa, ob) {
         (Some((a, va)), Some((b, vb))) => {
             if distance(p, &a.0) < distance(p, &b.0) {
-                Some((a, va, Which::A))
+                Some((a, va))
             } else {
-                Some((b, vb, Which::B))
+                Some((b, vb))
             }
         }
-        (Some((a, va)), None) => Some((a, va, Which::A)),
-        (None, Some((b, vb))) => Some((b, vb, Which::B)),
+        (Some((a, va)), None) => Some((a, va)),
+        (None, Some((b, vb))) => Some((b, vb)),
         (None, None) => None,
     }
 }
@@ -176,7 +171,7 @@ pub fn farthest_option(
     p: &P2,
     ova: Option<Vec<(P2, Normal)>>,
     ovb: Option<Vec<(P2, Normal)>>,
-) -> Option<((P2, Normal), Vec<(P2, Normal)>, Which)> {
+) -> Option<((P2, Normal), Vec<(P2, Normal)>)> {
     let oa: Option<((P2, Normal), Vec<(P2, Normal)>)> = ova.and_then(|v| {
         let mut max_distance = 0.;
         let mut res = None;
@@ -206,13 +201,13 @@ pub fn farthest_option(
     match (oa, ob) {
         (Some((a, va)), Some((b, vb))) => {
             if distance(p, &a.0) > distance(p, &b.0) {
-                Some((a, va, Which::A))
+                Some((a, va))
             } else {
-                Some((b, vb, Which::B))
+                Some((b, vb))
             }
         }
-        (Some((a, va)), None) => Some((a, va, Which::A)),
-        (None, Some((b, vb))) => Some((b, vb, Which::B)),
+        (Some((a, va)), None) => Some((a, va)),
+        (None, Some((b, vb))) => Some((b, vb)),
         (None, None) => None,
     }
 }
