@@ -21,6 +21,17 @@ impl<T: Copy + Clone> OneOrTwo<T> {
         }
     }
 
+    pub fn map<U, F>(self, func: F) -> OneOrTwo<U>
+    where
+        F: Fn(T) -> U,
+        U: Copy + Clone,
+    {
+        OneOrTwo {
+            items: (func(self.items.0), self.items.1.map(func)),
+            iter_ix: 0,
+        }
+    }
+
     pub fn to_vec(&self) -> Vec<T> {
         if let Some(item_b) = self.items.1 {
             vec![self.items.0, item_b]
@@ -118,14 +129,14 @@ pub enum Which {
 
 pub fn nearest_option(
     p: &P2,
-    ova: Option<Vec<P2>>,
-    ovb: Option<Vec<P2>>,
-) -> Option<(P2, Vec<P2>, Which)> {
-    let oa: Option<(P2, Vec<P2>)> = ova.and_then(|v| {
+    ova: Option<Vec<(P2, Normal)>>,
+    ovb: Option<Vec<(P2, Normal)>>,
+) -> Option<((P2, Normal), Vec<(P2, Normal)>, Which)> {
+    let oa: Option<((P2, Normal), Vec<(P2, Normal)>)> = ova.and_then(|v| {
         let mut min_distance = Float::MAX;
         let mut res = None;
         for a in v.iter() {
-            let dist = distance(p, a);
+            let dist = distance(p, &a.0);
             if dist < min_distance {
                 min_distance = dist;
                 res = Some(*a);
@@ -134,11 +145,11 @@ pub fn nearest_option(
         res.map(|p| (p, v))
     });
 
-    let ob: Option<(P2, Vec<P2>)> = ovb.and_then(|v| {
+    let ob: Option<((P2, Normal), Vec<(P2, Normal)>)> = ovb.and_then(|v| {
         let mut min_distance = Float::MAX;
         let mut res = None;
         for b in v.iter() {
-            let dist = distance(p, &b);
+            let dist = distance(p, &b.0);
             if dist < min_distance {
                 min_distance = dist;
                 res = Some(*b);
@@ -149,7 +160,7 @@ pub fn nearest_option(
 
     match (oa, ob) {
         (Some((a, va)), Some((b, vb))) => {
-            if distance(p, &a) < distance(p, &b) {
+            if distance(p, &a.0) < distance(p, &b.0) {
                 Some((a, va, Which::A))
             } else {
                 Some((b, vb, Which::B))
@@ -163,14 +174,14 @@ pub fn nearest_option(
 
 pub fn farthest_option(
     p: &P2,
-    ova: Option<Vec<P2>>,
-    ovb: Option<Vec<P2>>,
-) -> Option<(P2, Vec<P2>, Which)> {
-    let oa: Option<(P2, Vec<P2>)> = ova.and_then(|v| {
+    ova: Option<Vec<(P2, Normal)>>,
+    ovb: Option<Vec<(P2, Normal)>>,
+) -> Option<((P2, Normal), Vec<(P2, Normal)>, Which)> {
+    let oa: Option<((P2, Normal), Vec<(P2, Normal)>)> = ova.and_then(|v| {
         let mut max_distance = 0.;
         let mut res = None;
         for a in v.iter() {
-            let dist = distance(p, &a);
+            let dist = distance(p, &a.0);
             if dist > max_distance {
                 max_distance = dist;
                 res = Some(*a);
@@ -179,11 +190,11 @@ pub fn farthest_option(
         res.map(|a| (a, v))
     });
 
-    let ob: Option<(P2, Vec<P2>)> = ovb.and_then(|v| {
+    let ob: Option<((P2, Normal), Vec<(P2, Normal)>)> = ovb.and_then(|v| {
         let mut max_distance = 0.;
         let mut res = None;
         for b in v.iter() {
-            let dist = distance(p, &b);
+            let dist = distance(p, &b.0);
             if dist > max_distance {
                 max_distance = dist;
                 res = Some(*b);
@@ -194,7 +205,7 @@ pub fn farthest_option(
 
     match (oa, ob) {
         (Some((a, va)), Some((b, vb))) => {
-            if distance(p, &a) > distance(p, &b) {
+            if distance(p, &a.0) > distance(p, &b.0) {
                 Some((a, va, Which::A))
             } else {
                 Some((b, vb, Which::B))

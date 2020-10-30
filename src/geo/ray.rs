@@ -134,14 +134,13 @@ impl Ray {
 impl ReflectOn<Line> for Ray {
     fn reflect_on_normal_intersect(&self, line: &Line) -> Option<(Ray, V2, P2)> {
         match self.intersect(line) {
-            Some(intersection) => {
-                let n = line.get_normal().into_inner();
+            Some((intersection, n)) => {
                 let b = 2.0 * intersection - self.origin.coords;
                 let dist = line.distance(&Point2::from(b - intersection));
-                let new_b = b - 2.0 * dist * n;
+                let new_b = b - 2.0 * dist * n.into_inner();
                 Some((
                     Ray::from_origin(intersection, new_b.coords),
-                    n,
+                    n.into_inner(),
                     intersection,
                 ))
             }
@@ -153,7 +152,7 @@ impl ReflectOn<Line> for Ray {
 impl ReflectOn<Ray> for Ray {
     fn reflect_on_normal_intersect(&self, ray: &Ray) -> Option<(Ray, V2, P2)> {
         match self.intersect(ray) {
-            Some(intersection) => {
+            Some((intersection, _)) => {
                 let mut n = ray.normal.into_inner();
                 if n.dot(&self.get_direction()) < 0.0 {
                     n = -n;
@@ -191,7 +190,7 @@ impl ReflectOn<Ray> for Ray {
 
 impl ReflectOn<LineSegment> for Ray {
     fn reflect_on_normal_intersect(&self, ls: &LineSegment) -> Option<(Self, V2, P2)> {
-        if let Some(i) = self.intersect(ls) {
+        if let Some((i, _)) = self.intersect(ls) {
             let n = ls.get_normal().into_inner();
             let d = self.direction.into_inner();
             let r = d - 2. * d.dot(&n) * n;
@@ -302,13 +301,13 @@ impl ReflectOn<Geo> for Ray {
 }
 
 impl Intersect<Line> for Ray {
-    type Intersection = P2;
-    fn intersect(&self, l: &Line) -> Option<P2> {
+    type Intersection = (P2, Normal);
+    fn intersect(&self, l: &Line) -> Option<(P2, Normal)> {
         if let Some((v, r, _)) = self.to_line().intersect(l) {
             if r < 0.0 {
                 None
             } else {
-                Some(v)
+                Some((v, l.get_normal()))
             }
         } else {
             None
@@ -317,13 +316,13 @@ impl Intersect<Line> for Ray {
 }
 
 impl Intersect<Ray> for Ray {
-    type Intersection = P2;
-    fn intersect(&self, other: &Ray) -> Option<P2> {
+    type Intersection = (P2, Normal);
+    fn intersect(&self, other: &Ray) -> Option<(P2, Normal)> {
         if let Some((v, r, s)) = self.to_line().intersect(&other.to_line()) {
             if r < 0.0 || s < 0.0 {
                 None
             } else {
-                Some(v)
+                Some((v, other.get_normal()))
             }
         } else {
             None
@@ -332,15 +331,15 @@ impl Intersect<Ray> for Ray {
 }
 
 impl Intersect<LineSegment> for Ray {
-    type Intersection = P2;
-    fn intersect(&self, other: &LineSegment) -> Option<P2> {
+    type Intersection = (P2, Normal);
+    fn intersect(&self, other: &LineSegment) -> Option<(P2, Normal)> {
         let oline: Line = other.into();
         let length = (other.get_b() - other.get_a()).norm();
         if let Some((v, r, s)) = self.to_line().intersect(&oline) {
             if r < 0.0 || s < 0.0 || s > length {
                 None
             } else {
-                Some(v)
+                Some((v, other.get_normal()))
             }
         } else {
             None
@@ -349,17 +348,25 @@ impl Intersect<LineSegment> for Ray {
 }
 
 impl Intersect<Circle> for Ray {
-    type Intersection = OneOrTwo<P2>;
-    fn intersect(&self, circle: &Circle) -> Option<OneOrTwo<P2>> {
+    type Intersection = OneOrTwo<(P2, Normal)>;
+    fn intersect(&self, circle: &Circle) -> Option<OneOrTwo<(P2, Normal)>> {
         if let Some((r, s)) = circle.intersect(&self.to_line()) {
             if r > 0. && s > 0. {
-                let mut res = OneOrTwo::new(self.eval_at_r(r));
-                res.add(self.eval_at_r(s));
+                let rp = self.eval_at_r(r);
+                let sp = self.eval_at_r(s);
+                let normal_r = Unit::new_normalize(rp - circle.get_origin());
+                let normal_s = Unit::new_normalize(sp - circle.get_origin());
+                let mut res = OneOrTwo::new((rp, normal_r));
+                res.add((sp, normal_s));
                 Some(res)
             } else if r > 0. {
-                Some(OneOrTwo::new(self.eval_at_r(r)))
+                let rp = self.eval_at_r(r);
+                let normal_r = Unit::new_normalize(rp - circle.get_origin());
+                Some(OneOrTwo::new((rp, normal_r)))
             } else if s > 0. {
-                Some(OneOrTwo::new(self.eval_at_r(s)))
+                let sp = self.eval_at_r(s);
+                let normal_s = Unit::new_normalize(sp - circle.get_origin());
+                Some(OneOrTwo::new((sp, normal_s)))
             } else {
                 None
             }
@@ -370,31 +377,33 @@ impl Intersect<Circle> for Ray {
 }
 
 impl Intersect<MCircle> for Ray {
-    type Intersection = P2;
-    fn intersect(&self, mcircle: &MCircle) -> Option<P2> {
+    type Intersection = (P2, Normal);
+    fn intersect(&self, mcircle: &MCircle) -> Option<(P2, Normal)> {
         let circle = Circle {
             origin: mcircle.path.get_b(),
             radius: mcircle.radius,
         };
         circle
             .intersect(&self.to_line())
-            .map(|(r, s)| smallest_positive_value(r, s).map(|r| self.eval_at_r(r)))
+            .map(|(r, s)| smallest_positive_value(r, s).map(|r| { let rp = self.eval_at_r(r); let normal_r = Unit::new_normalize(rp - circle.get_origin());
+        (rp, normal_r)
+            }))
             .flatten()
     }
 }
 
 impl Intersect<Rect> for Ray {
-    type Intersection = OneOrTwo<P2>;
-    fn intersect(&self, rect: &Rect) -> Option<OneOrTwo<P2>> {
-        let mut closest: Option<OneOrTwo<P2>> = None;
+    type Intersection = OneOrTwo<(P2, Normal)>;
+    fn intersect(&self, rect: &Rect) -> Option<OneOrTwo<(P2, Normal)>> {
+        let mut closest: Option<OneOrTwo<(P2, Normal)>> = None;
         for ls in rect.line_segments().iter() {
-            if let Some(v) = self.intersect(ls) {
+            if let Some((v, n)) = self.intersect(ls) {
                 if let Some(oot) = closest.as_mut() {
-                    if distance(&self.origin, &v) < distance(&self.origin, &oot.get_first()) {
-                        oot.add(v);
+                    if distance(&self.origin, &v) < distance(&self.origin, &oot.get_first().0) {
+                        oot.add((v, n));
                     }
                 } else {
-                    closest = Some(OneOrTwo::new(v));
+                    closest = Some(OneOrTwo::new((v, n)));
                 }
             }
         }
@@ -403,18 +412,18 @@ impl Intersect<Rect> for Ray {
 }
 
 impl Intersect<AABB> for Ray {
-    type Intersection = P2;
-    fn intersect(&self, rect: &AABB) -> Option<P2> {
-        let mut closest: Option<P2> = None;
+    type Intersection = (P2, Normal);
+    fn intersect(&self, rect: &AABB) -> Option<(P2, Normal)> {
+        let mut closest: Option<(P2, Normal)> = None;
         for ls in rect.line_segments().iter() {
-            if let Some(v) = self.intersect(ls) {
-                if let Some(cv) = closest {
+            if let Some((v, n)) = self.intersect(ls) {
+                if let Some((cv, _)) = closest {
                     if distance(&self.origin, &v) < distance(&self.origin, &cv) {
-                        closest = Some(v)
-                    } else {
-                        closest = Some(v);
+                        closest = Some((v, n));
+                    } 
+                }else {
+                        closest = Some((v, n));
                     }
-                }
             }
         }
         closest
@@ -422,21 +431,21 @@ impl Intersect<AABB> for Ray {
 }
 
 impl Intersect<Logic> for Ray {
-    type Intersection = (P2, Vec<P2>, Geo);
+    type Intersection = ((P2, Normal), Vec<(P2, Normal)>, Geo);
     fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
         let a = l.get_a();
         let b = l.get_b();
         let is_inside = l.contains(&self.origin);
-        let isa: Option<Vec<P2>> = self.intersect(&a);
+        let isa: Option<Vec<(P2, Normal)>> = self.intersect(&a);
         let isb = self.intersect(&b);
-        let match_ab = |(p, v, w): (P2, Vec<P2>, Which)| match w {
+        let match_ab = |(p, v, w): ((P2, Normal), Vec<(P2, Normal)>, Which)| match w {
             Which::A => (p, v, a.clone()),
             Which::B => (p, v, b.clone()),
         };
         match l.op {
             LogicOp::And => {
-                let isa = isa.map(|va| va.into_iter().filter(|pa| b.contains(pa)).collect());
-                let isb = isb.map(|vb| vb.into_iter().filter(|pb| a.contains(pb)).collect());
+                let isa: Option<Vec<(P2, Normal)>> = isa.map(|va| va.into_iter().filter(|(pa, _)| b.contains(pa)).collect());
+                let isb: Option<Vec<(P2, Normal)>> = isb.map(|vb| vb.into_iter().filter(|(pb, _)| a.contains(pb)).collect());
                 nearest_option(&self.origin, isa, isb).map(match_ab)
             }
             LogicOp::Or => {
@@ -447,8 +456,8 @@ impl Intersect<Logic> for Ray {
                 }
             }
             LogicOp::AndNot => {
-                let isb = isb.map(|v| v.into_iter().filter(|p| a.contains(p)).collect());
-                let isa = isa.map(|v| v.into_iter().filter(|p| !b.contains(p)).collect());
+                let isb = isb.map(|v| v.into_iter().filter(|(p, _)| a.contains(p)).collect());
+                let isa = isa.map(|v| v.into_iter().filter(|(p, _)| !b.contains(p)).collect());
                 nearest_option(&self.origin, isa, isb).map(match_ab)
             }
         }
@@ -456,7 +465,7 @@ impl Intersect<Logic> for Ray {
 }
 
 impl Intersect<Geo> for Ray {
-    type Intersection = Vec<P2>;
+    type Intersection = Vec<(P2, Normal)>;
     fn intersect(&self, other: &Geo) -> Option<Self::Intersection> {
         match other {
             Geo::GeoRay(ray) => self.intersect(ray).map(|p| vec![p]),

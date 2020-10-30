@@ -194,7 +194,7 @@ impl Intersect<Ray> for LineSegment {
     type Intersection = P2;
 
     fn intersect(&self, ray: &Ray) -> Option<P2> {
-        ray.intersect(self)
+        ray.intersect(self).map(|(p, _)| p)
     }
 }
 
