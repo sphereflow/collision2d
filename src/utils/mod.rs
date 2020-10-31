@@ -104,15 +104,16 @@ pub fn between(num: Float, a: Float, b: Float) -> bool {
     (num >= a) && (num <= b)
 }
 
-pub fn smallest_positive_value(a: Float, b: Float) -> Option<Float> {
+/// the smallest positive value is always in the first position
+pub fn smallest_positive_sort(a: Float, b: Float) -> Option<(Float, Float)> {
     if a >= 0. {
-        if b >= 0. {
-            Some(a.min(b))
+        if b > a || b < 0. {
+            Some((a, b))
         } else {
-            Some(a)
+            Some((b, a))
         }
     } else if b >= 0. {
-        Some(b)
+        Some((b, a))
     } else {
         None
     }

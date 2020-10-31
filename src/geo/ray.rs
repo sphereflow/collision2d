@@ -1,8 +1,7 @@
 extern crate nalgebra as na;
 
 use super::*;
-use na::geometry::Point2;
-use na::{distance, Unit, Vector2};
+use na::{distance_squared, Unit, Vector2};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 
@@ -25,7 +24,11 @@ impl Ray {
     }
 
     pub fn to_line(&self) -> Line {
-        Line::new(self.origin, self.direction.into_inner())
+        Line::new_unchecked(self.origin, self.direction, self.normal)
+    }
+
+    pub fn into_line(self) -> Line {
+        Line::new_unchecked(self.origin, self.direction, self.normal)
     }
 
     pub fn get_origin(&self) -> P2 {
@@ -66,7 +69,7 @@ impl Ray {
         self.origin + r * self.direction.into_inner()
     }
 
-    pub fn reflect(&self, (i, normal): &(P2, Normal)) -> Self {
+    pub fn reflect(&self, i: &P2, normal: &Normal) -> Self {
         let n = normal.into_inner();
         let d = self.direction.into_inner();
         let r = d - 2. * d.dot(&n) * n;
@@ -138,117 +141,22 @@ impl Ray {
     }
 }
 
-impl ReflectOn<Line> for Ray {
-    fn reflect_on_normal_intersect(&self, line: &Line) -> Option<(Ray, V2, P2)> {
-        match self.intersect(line) {
-            Some((intersection, n)) => {
-                let b = 2.0 * intersection - self.origin.coords;
-                let dist = line.distance(&Point2::from(b - intersection));
-                let new_b = b - 2.0 * dist * n.into_inner();
-                Some((
-                    Ray::from_origin(intersection, new_b.coords),
-                    n.into_inner(),
-                    intersection,
-                ))
-            }
-            None => None,
-        }
-    }
-}
-
-impl ReflectOn<Ray> for Ray {
-    fn reflect_on_normal_intersect(&self, ray: &Ray) -> Option<(Ray, V2, P2)> {
-        match self.intersect(ray) {
-            Some((intersection, normal)) => {
-                let mut n = normal.into_inner();
-                if n.dot(&self.get_direction()) < 0.0 {
-                    n = -n;
-                }
-                let b = Point2::from(2.0 * intersection - self.origin);
-                let dist = ray.to_line().distance(&b);
-                let new_b = b - 2.0 * dist * n;
-                Some((
-                    Ray::from_origin(intersection, new_b - intersection),
-                    n,
-                    intersection,
-                ))
-            }
-            None => None,
-        }
-    }
-}
-
-// impl ReflectOn<LineSegment> for Ray {
-// fn reflect_on_normal(&self, ls: &LineSegment) -> Option<(Self, V2)> {
-// if let Some(i) = self.intersect(ls) {
-// let n = ls.get_normal().into_inner();
-// let c1 = n[0] * n[0] - n[1] * n[1];
-// let c2 = 2. * n[0] * n[1];
-// let r = Vector2::new(
-// self.direction[0] * c2 + self.direction[1] * c1,
-// self.direction[1] * c2 - self.direction[0] * c1,
-// );
-// Some((Ray::from_origin(Point2::from(i), r), n))
-// } else {
-// None
-// }
-// }
-// }
-
-impl ReflectOn<LineSegment> for Ray {
-    fn reflect_on_normal_intersect(&self, ls: &LineSegment) -> Option<(Self, V2, P2)> {
-        if let Some((i, normal)) = self.intersect(ls) {
-            let n = normal.into_inner();
-            let d = self.direction.into_inner();
-            let r = d - 2. * d.dot(&n) * n;
-            let ray = Ray::from_origin(i, r).offset();
-            Some((ray, n, i))
-        } else {
-            None
-        }
+impl<T> ReflectOn<T> for Ray
+where
+    Ray: Intersect<T, Intersection = (P2, Normal)>,
+{
+    fn reflect_on_normal_intersect(&self, other: &T) -> Option<(Self, V2, P2)> {
+        self.intersect(other)
+            .map(|(i, normal)| (self.reflect(&i, &normal), normal.into_inner(), i))
     }
 }
 
 impl ReflectOn<Circle> for Ray {
     fn reflect_on_normal_intersect(&self, circle: &Circle) -> Option<(Ray, V2, P2)> {
-        match circle.intersect(&self.to_line()) {
-            Some((r, s)) => {
-                if let Some(i) = smallest_positive_value(r, s).map(|r| self.eval_at_r(r)) {
-                    let n = (i - circle.origin).normalize();
-                    let d = self.direction.into_inner();
-                    let dotp = d.dot(&n);
-                    let r = d - 2. * dotp * n;
-                    let ray = Ray::from_origin(i, r).offset();
-                    Some((ray, n, i))
-                } else {
-                    None
-                }
-            }
-            None => None,
-        }
-    }
-}
-
-impl ReflectOn<MCircle> for Ray {
-    fn reflect_on_normal_intersect(&self, mcircle: &MCircle) -> Option<(Ray, V2, P2)> {
-        let circle = Circle {
-            origin: mcircle.path.get_b(),
-            radius: mcircle.radius,
-        };
-        match circle.intersect(&self.to_line()) {
-            Some((r, s)) => {
-                if let Some(i) = smallest_positive_value(r, s).map(|r| self.eval_at_r(r)) {
-                    let n = (i - circle.origin).normalize();
-                    let d = self.direction.into_inner();
-                    let r = d - 2. * (d.dot(&n) * n);
-                    let ray = Ray::from_origin(i, r).offset();
-                    Some((ray, n, i))
-                } else {
-                    None
-                }
-            }
-            None => None,
-        }
+        self.intersect(circle).map(|oot| {
+            let (i, normal) = oot.get_first();
+            (self.reflect(&i, &normal), normal.into_inner(), i)
+        })
     }
 }
 
@@ -258,7 +166,7 @@ impl ReflectOn<Rect> for Ray {
         for ls in rect.line_segments().iter() {
             if let Some((ray, n, i)) = self.reflect_on_normal_intersect(ls) {
                 if let Some((_clray, _, cli)) = closest {
-                    if distance(&i, &self.origin) < distance(&cli, &self.origin) {
+                    if distance_squared(&i, &self.origin) < distance_squared(&cli, &self.origin) {
                         closest = Some((ray, n, i));
                     }
                 } else {
@@ -276,9 +184,13 @@ impl ReflectOn<AABB> for Ray {
         for ls in rect.line_segments().iter() {
             if let Some((ray, n, i)) = self.reflect_on_normal_intersect(ls) {
                 if let Some((clray, _, _)) = closest {
-                    if distance(&ray.origin, &self.origin) < distance(&clray.origin, &self.origin) {
+                    if distance_squared(&ray.origin, &self.origin)
+                        < distance_squared(&clray.origin, &self.origin)
+                    {
                         closest = Some((ray, n, i));
                     }
+                } else {
+                    closest = Some((ray, n, i))
                 }
             }
         }
@@ -289,7 +201,7 @@ impl ReflectOn<AABB> for Ray {
 impl ReflectOn<Logic> for Ray {
     fn reflect_on_normal_intersect(&self, l: &Logic) -> Option<(Self, V2, P2)> {
         self.intersect(l)
-            .map(|((p, normal), _)| (self.reflect(&(p, normal)), normal.into_inner(), p))
+            .map(|((p, normal), _)| (self.reflect(&p, &normal), normal.into_inner(), p))
     }
 }
 
@@ -341,9 +253,8 @@ impl Intersect<LineSegment> for Ray {
     type Intersection = (P2, Normal);
     fn intersect(&self, other: &LineSegment) -> Option<(P2, Normal)> {
         let oline: Line = other.into();
-        let length = (other.get_b() - other.get_a()).norm();
         if let Some((v, r, s)) = self.to_line().intersect(&oline) {
-            if r < 0.0 || s < 0.0 || s > length {
+            if r < 0.0 || s < 0.0 || s * s > other.length_sq() {
                 None
             } else {
                 Some((v, other.get_normal()))
@@ -357,26 +268,20 @@ impl Intersect<LineSegment> for Ray {
 impl Intersect<Circle> for Ray {
     type Intersection = OneOrTwo<(P2, Normal)>;
     fn intersect(&self, circle: &Circle) -> Option<OneOrTwo<(P2, Normal)>> {
-        if let Some((r, s)) = circle.intersect(&self.to_line()) {
-            if r > 0. && s > 0. {
-                let rp = self.eval_at_r(r);
+        if let Some((r, s)) = circle
+            .intersect(&self.to_line())
+            .and_then(|(r, s)| smallest_positive_sort(r, s))
+        {
+            // at this point r is guaranteed to be positive
+            let rp = self.eval_at_r(r);
+            let normal_r = Unit::new_normalize(rp - circle.get_origin());
+            let mut res = OneOrTwo::new((rp, normal_r));
+            if s > 0. {
                 let sp = self.eval_at_r(s);
-                let normal_r = Unit::new_normalize(rp - circle.get_origin());
                 let normal_s = Unit::new_normalize(sp - circle.get_origin());
-                let mut res = OneOrTwo::new((rp, normal_r));
                 res.add((sp, normal_s));
-                Some(res)
-            } else if r > 0. {
-                let rp = self.eval_at_r(r);
-                let normal_r = Unit::new_normalize(rp - circle.get_origin());
-                Some(OneOrTwo::new((rp, normal_r)))
-            } else if s > 0. {
-                let sp = self.eval_at_r(s);
-                let normal_s = Unit::new_normalize(sp - circle.get_origin());
-                Some(OneOrTwo::new((sp, normal_s)))
-            } else {
-                None
             }
+            Some(res)
         } else {
             None
         }
@@ -386,16 +291,13 @@ impl Intersect<Circle> for Ray {
 impl Intersect<MCircle> for Ray {
     type Intersection = (P2, Normal);
     fn intersect(&self, mcircle: &MCircle) -> Option<(P2, Normal)> {
-        let circle = Circle {
-            origin: mcircle.path.get_b(),
-            radius: mcircle.radius,
-        };
+        let circle = mcircle.circle_b();
         circle
             .intersect(&self.to_line())
             .map(|(r, s)| {
-                smallest_positive_value(r, s).map(|r| {
+                smallest_positive_sort(r, s).map(|(r, _)| {
                     let rp = self.eval_at_r(r);
-                    let normal_r = Unit::new_normalize(rp - circle.get_origin());
+                    let normal_r = Unit::new_normalize(rp - circle.origin);
                     (rp, normal_r)
                 })
             })
@@ -405,12 +307,14 @@ impl Intersect<MCircle> for Ray {
 
 impl Intersect<Rect> for Ray {
     type Intersection = OneOrTwo<(P2, Normal)>;
-    fn intersect(&self, rect: &Rect) -> Option<OneOrTwo<(P2, Normal)>> {
-        let mut closest: Option<OneOrTwo<(P2, Normal)>> = None;
+    fn intersect(&self, rect: &Rect) -> Option<Self::Intersection> {
+        let mut closest: Option<Self::Intersection> = None;
         for ls in rect.line_segments().iter() {
             if let Some((v, n)) = self.intersect(ls) {
                 if let Some(oot) = closest.as_mut() {
-                    if distance(&self.origin, &v) < distance(&self.origin, &oot.get_first().0) {
+                    if distance_squared(&self.origin, &v)
+                        < distance_squared(&self.origin, &oot.get_first().0)
+                    {
                         oot.add((v, n));
                     }
                 } else {
@@ -423,17 +327,19 @@ impl Intersect<Rect> for Ray {
 }
 
 impl Intersect<AABB> for Ray {
-    type Intersection = (P2, Normal);
-    fn intersect(&self, rect: &AABB) -> Option<(P2, Normal)> {
-        let mut closest: Option<(P2, Normal)> = None;
-        for ls in rect.line_segments().iter() {
+    type Intersection = OneOrTwo<(P2, Normal)>;
+    fn intersect(&self, aabb: &AABB) -> Option<Self::Intersection> {
+        let mut closest: Option<Self::Intersection> = None;
+        for ls in aabb.line_segments().iter() {
             if let Some((v, n)) = self.intersect(ls) {
-                if let Some((cv, _)) = closest {
-                    if distance(&self.origin, &v) < distance(&self.origin, &cv) {
-                        closest = Some((v, n));
+                if let Some(oot) = closest.as_mut() {
+                    if distance_squared(&self.origin, &v)
+                        < distance_squared(&self.origin, &oot.get_first().0)
+                    {
+                        oot.add((v, n));
                     }
                 } else {
-                    closest = Some((v, n));
+                    closest = Some(OneOrTwo::new((v, n)));
                 }
             }
         }

@@ -31,6 +31,14 @@ impl Line {
         }
     }
 
+    pub fn new_unchecked(origin: P2, direction: U2, normal: Normal) -> Line {
+        Line {
+            origin,
+            direction,
+            normal,
+        }
+    }
+
     pub fn get_normal(&self) -> Normal {
         self.normal
     }
@@ -59,8 +67,7 @@ impl HasOrigin for Line {
 }
 
 impl Scale for Line {
-    fn scale(&mut self, _scale_x: Float, _scale_y: Float) {
-    }
+    fn scale(&mut self, _scale_x: Float, _scale_y: Float) {}
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
         self.origin.scale_position(scale_x, scale_y);
     }
@@ -91,10 +98,15 @@ impl Intersect<Line> for Line {
 
     // returns r and s
     fn intersect(&self, other: &Line) -> Option<(P2, Float, Float)> {
-        let mut inv = Matrix2::from_columns(&[self.direction.into_inner(), -other.direction.into_inner()]);
+        let mut inv =
+            Matrix2::from_columns(&[self.direction.into_inner(), -other.direction.into_inner()]);
         if inv.try_inverse_mut() {
             let rs = inv * (other.origin - self.origin);
-            Some((self.origin + (self.direction.into_inner() * rs.x), rs.x, rs.y))
+            Some((
+                self.origin + (self.direction.into_inner() * rs.x),
+                rs.x,
+                rs.y,
+            ))
         } else {
             None
         }
@@ -111,7 +123,8 @@ impl Intersect<LineSegment> for Line {
 
 impl ReflectOn<Line> for Line {
     fn reflect_on_normal_intersect(&self, other: &Line) -> Option<(Self, V2, P2)> {
-        let dmat = Matrix2::from_columns(&[self.direction.into_inner(), -other.direction.into_inner()]);
+        let dmat =
+            Matrix2::from_columns(&[self.direction.into_inner(), -other.direction.into_inner()]);
         match inverse(&dmat) {
             Some(inv) => {
                 let n = other.get_normal().into_inner();
@@ -168,7 +181,10 @@ impl ReflectOn<Ray> for Line {
 
 impl ReflectOn<LineSegment> for Line {
     fn reflect_on_normal_intersect(&self, other: &LineSegment) -> Option<(Self, V2, P2)> {
-        let dmat = Matrix2::from_columns(&[self.direction.into_inner(), -other.get_direction().into_inner()]);
+        let dmat = Matrix2::from_columns(&[
+            self.direction.into_inner(),
+            -other.get_direction().into_inner(),
+        ]);
         match inverse(&dmat) {
             Some(inv) => {
                 let n = other.get_normal().into_inner();

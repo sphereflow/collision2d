@@ -2,7 +2,7 @@ extern crate nalgebra as na;
 
 use super::*;
 use na::geometry::{Point, Point2};
-use na::{distance, Unit, Vector2};
+use na::{distance, distance_squared, Unit, Vector2};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 
@@ -73,6 +73,10 @@ impl LineSegment {
 
     pub fn length(&self) -> Float {
         distance(&self.a, &self.b)
+    }
+
+    pub fn length_sq(&self) -> Float {
+        distance_squared(&self.a, &self.b)
     }
 
     pub fn eval_at_r(&self, r: Float) -> P2 {
