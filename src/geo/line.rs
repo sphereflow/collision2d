@@ -1,17 +1,6 @@
 extern crate nalgebra as na;
 
-use super::aabb::AABB;
-use super::circle::Circle;
-use super::line_segment::LineSegment;
-use super::mcircle::MCircle;
-use super::ray::Ray;
-use super::rect::Rect;
-use super::traits::*;
-use crate::utils::*;
-use na::base::{Matrix2, Unit};
-use na::Vector2;
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
+use super::*;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Line {
@@ -22,7 +11,7 @@ pub struct Line {
 
 impl Line {
     pub fn new(origin: P2, direction: V2) -> Line {
-        let normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
+        let normal = Unit::new_normalize(V2::new(-direction.y, direction.x));
         let direction = Unit::new_normalize(direction);
         Line {
             origin,
@@ -48,7 +37,7 @@ impl Line {
     }
 
     pub fn set_direction(&mut self, direction: V2) {
-        self.normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
+        self.normal = Unit::new_normalize(V2::new(-direction.y, direction.x));
         self.direction = Unit::new_normalize(direction);
     }
 
@@ -221,14 +210,14 @@ impl ClosestPoint for Line {
 
 impl Distance for Line {
     fn distance(&self, p: &P2) -> Float {
-        Vector2::dot(&(p - self.origin), &self.get_normal()).abs()
+        V2::dot(&(p - self.origin), &self.get_normal()).abs()
     }
 }
 
 impl Distribution<Line> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Line {
         let direction: U2 = rng.gen();
-        let normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
+        let normal = Unit::new_normalize(V2::new(-direction.y, direction.x));
         Line {
             origin: rng.gen(),
             direction,

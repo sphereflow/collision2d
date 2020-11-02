@@ -1,15 +1,6 @@
 extern crate nalgebra as na;
 
-use super::aabb::AABB;
-use super::circle::Circle;
-use super::line::Line;
-use super::line_segment::LineSegment;
-use super::mcircle::MCircle;
-use super::ray::Ray;
-use super::rect::Rect;
-use super::Geo;
-use crate::utils::*;
-use na::Matrix2;
+use super::*;
 
 pub trait HasOrigin {
     fn get_origin(&self) -> P2;

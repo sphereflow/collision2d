@@ -1,9 +1,6 @@
 extern crate nalgebra as na;
 
 use super::*;
-use na::{distance_squared, Unit, Vector2};
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Ray {
@@ -14,7 +11,7 @@ pub struct Ray {
 
 impl Ray {
     pub fn from_origin(origin: P2, direction: V2) -> Ray {
-        let normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
+        let normal = Unit::new_normalize(V2::new(-direction.y, direction.x));
         let direction = Unit::new_normalize(direction);
         Ray {
             origin,
@@ -62,7 +59,7 @@ impl Ray {
     pub fn set_direction(&mut self, direction: V2) {
         self.direction = Unit::new_normalize(direction);
         // normal is rotated counter clockwise
-        self.normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x))
+        self.normal = Unit::new_normalize(V2::new(-direction.y, direction.x))
     }
 
     pub fn eval_at_r(&self, r: Float) -> P2 {

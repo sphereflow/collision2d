@@ -1,10 +1,6 @@
 extern crate nalgebra as na;
 
 use super::*;
-use na::geometry::{Point, Point2};
-use na::{distance, distance_squared, Unit, Vector2};
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct LineSegment {
@@ -17,7 +13,7 @@ pub struct LineSegment {
 impl LineSegment {
     pub fn from_ab(a: P2, b: P2) -> LineSegment {
         let direction = Unit::new_normalize(b - a);
-        let normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x));
+        let normal = Unit::new_normalize(V2::new(-direction.y, direction.x));
         LineSegment {
             a,
             b,
@@ -33,7 +29,7 @@ impl LineSegment {
     pub fn set_a(&mut self, a: P2) {
         self.a = a;
         self.direction = Unit::new_normalize(self.b - self.a);
-        self.normal = Unit::new_normalize(Vector2::new(-self.direction.y, self.direction.x));
+        self.normal = Unit::new_normalize(V2::new(-self.direction.y, self.direction.x));
     }
 
     pub fn shift(&mut self, v: V2) {
@@ -44,7 +40,7 @@ impl LineSegment {
     pub fn set_b(&mut self, b: P2) {
         self.b = b;
         self.direction = Unit::new_normalize(self.b - self.a);
-        self.normal = Unit::new_normalize(Vector2::new(-self.direction.y, self.direction.x));
+        self.normal = Unit::new_normalize(V2::new(-self.direction.y, self.direction.x));
     }
 
     pub fn get_b(&self) -> P2 {
@@ -63,7 +59,7 @@ impl LineSegment {
         self.b = self.a + direction;
         self.direction = Unit::new_normalize(direction);
         // normal is rotated counter clockwise
-        self.normal = Unit::new_normalize(Vector2::new(-direction.y, direction.x))
+        self.normal = Unit::new_normalize(V2::new(-direction.y, direction.x))
     }
 
     pub fn shorten_towards_b(&mut self, factor: Float) {
@@ -92,7 +88,7 @@ impl HasOrigin for LineSegment {
     fn set_origin(&mut self, origin: P2) {
         let dir = self.b - self.a;
         let old_pos = self.get_origin();
-        self.a = Point::from(self.a + origin.coords - old_pos);
+        self.a = P2::from(self.a + origin.coords - old_pos);
         self.b = self.a + dir;
     }
 }
@@ -132,7 +128,7 @@ impl ReflectOn<Line> for LineSegment {
         match self.intersect(line) {
             Some(i) => {
                 let n = self.normal.into_inner();
-                let dist = line.distance(&Point2::from(self.b - i));
+                let dist = line.distance(&P2::from(self.b - i));
                 let new_b = self.b - 2.0 * dist * n;
                 Some((LineSegment::from_ab(i, new_b), n))
             }

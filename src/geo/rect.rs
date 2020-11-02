@@ -1,16 +1,6 @@
 extern crate nalgebra as na;
 
-use super::aabb::AABB;
-use super::circle::Circle;
-use super::line::Line;
-use super::line_segment::LineSegment;
-use super::mcircle::MCircle;
-use super::ray::Ray;
-use super::traits::*;
-use crate::utils::*;
-use na::{distance, Matrix2, Point2, Rotation2, Unit, Vector2};
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
+use super::*;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Rect {
@@ -36,8 +26,8 @@ impl Rect {
 
     pub fn from_tlbr(top: Float, left: Float, bottom: Float, right: Float) -> Self {
         Rect {
-            origin: Point2::new((left + right) * 0.5, (top + bottom) * 0.5),
-            x_axis: Unit::new_unchecked(Vector2::new(1.0, 0.0)),
+            origin: P2::new((left + right) * 0.5, (top + bottom) * 0.5),
+            x_axis: Unit::new_unchecked(V2::new(1.0, 0.0)),
             width: (right - left).abs(),
             height: (top - bottom).abs(),
         }
@@ -50,11 +40,11 @@ impl Rect {
     }
 
     pub fn get_y_axis(&self) -> V2 {
-        Vector2::new(-self.x_axis.y, self.x_axis.x)
+        V2::new(-self.x_axis.y, self.x_axis.x)
     }
 
     pub fn points(&self) -> RectPoints {
-        let y_offset = Vector2::new(-self.x_axis.y, self.x_axis.x) * self.height * 0.5;
+        let y_offset = V2::new(-self.x_axis.y, self.x_axis.x) * self.height * 0.5;
         let x_offset = self.x_axis.into_inner() * self.width * 0.5;
         let top_right = x_offset + y_offset;
         let bottom_right = x_offset - y_offset;
@@ -246,13 +236,13 @@ impl Scale for Rect {
 
 impl Contains for Rect {
     fn contains(&self, p: &P2) -> bool {
-        let rot = Rotation2::rotation_between(&self.x_axis, &Vector2::new(1.0, 0.0));
+        let rot = Rotation2::rotation_between(&self.x_axis, &V2::new(1.0, 0.0));
         AABB {
-            origin: Point2::new(0.0, 0.0),
+            origin: P2::new(0.0, 0.0),
             width: self.width,
             height: self.height,
         }
-        .contains(&(rot * Point2::from(p - self.origin)))
+        .contains(&(rot * P2::from(p - self.origin)))
     }
 }
 

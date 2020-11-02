@@ -1,16 +1,6 @@
 extern crate nalgebra as na;
 
-use super::circle::Circle;
-use super::line::Line;
-use super::line_segment::LineSegment;
-use super::mcircle::MCircle;
-use super::ray::Ray;
-use super::rect::*;
-use super::traits::*;
-use crate::utils::*;
-use na::{Unit, Vector2};
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
+use super::*;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct AABB {
@@ -22,8 +12,8 @@ pub struct AABB {
 
 impl AABB {
     pub fn points(&self) -> RectPoints {
-        let top_right = Vector2::new(self.width * 0.5, self.height * 0.5);
-        let bottom_right = Vector2::new(self.width * 0.5, -self.height * 0.5);
+        let top_right = V2::new(self.width * 0.5, self.height * 0.5);
+        let bottom_right = V2::new(self.width * 0.5, -self.height * 0.5);
         [
             self.origin + top_right,
             self.origin + bottom_right,
@@ -45,7 +35,7 @@ impl AABB {
     pub fn to_rect(&self) -> Rect {
         Rect {
             origin: self.origin,
-            x_axis: Unit::new_unchecked(Vector2::new(1.0, 0.0)),
+            x_axis: Unit::new_unchecked(V2::new(1.0, 0.0)),
             width: self.width,
             height: self.height,
         }

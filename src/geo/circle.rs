@@ -1,16 +1,6 @@
 extern crate nalgebra as na;
-use super::aabb::AABB;
-use super::line::*;
-use super::line_segment::LineSegment;
-use super::mcircle::MCircle;
-use super::ray::Ray;
-use super::rect::Rect;
-use super::traits::*;
-use super::Geo;
-use crate::utils::*;
-use na::{distance, Point2};
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
+
+use super::*;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Circle {
@@ -61,7 +51,7 @@ impl Intersect<Line> for Circle {
             n = -n;
         }
         let mid_point = l.origin + co - n * dist;
-        ret.push(Geo::GeoPoint(Point2::new(mid_point.x, mid_point.y)));
+        ret.push(Geo::GeoPoint(P2::new(mid_point.x, mid_point.y)));
         ret
     }
 }
