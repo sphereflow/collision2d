@@ -14,27 +14,27 @@ impl Intersect<Line> for Circle {
 
     fn intersect(&self, l: &Line) -> Option<(Float, Float)> {
         let dist = l.distance(&self.origin);
-        let dist_sq = dist.powi(2);
-        let radius_sq = self.radius.powi(2);
-        if dist_sq < radius_sq {
+        if dist <= self.radius {
             let co = self.origin - l.origin;
-            let ldn = l.get_direction().normalize();
-            let mut n = l.get_normal().into_inner();
+            let ldn = l.get_direction();
+            let mut n = l.get_normal();
             if n.dot(&co) < 0.0 {
                 n = -n;
             }
-            let mid_point = co - n * dist;
-            let offset = Float::sqrt(radius_sq - dist_sq);
+            let mid_point = co - n.into_inner() * dist;
+            let offset = Float::sqrt(self.radius.powi(2) - dist.powi(2));
             let r;
             let s;
             if ldn.x > ldn.y {
                 // project u, v on the x-axis
-                r = (mid_point.x + offset * ldn.x) / l.get_direction().x;
-                s = (mid_point.x - offset * ldn.x) / l.get_direction().x;
+                let mid_point_projection = mid_point.x / l.get_direction().x;
+                r = mid_point_projection + offset;
+                s = mid_point_projection - offset;
             } else {
                 // project u, v on the y-axis
-                r = (mid_point.y + offset * ldn.y) / l.get_direction().y;
-                s = (mid_point.y - offset * ldn.y) / l.get_direction().y;
+                let mid_point_projection = mid_point.y / l.get_direction().y;
+                r = mid_point_projection + offset;
+                s = mid_point_projection - offset;
             }
             Some((r, s))
         } else {
