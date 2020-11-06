@@ -197,8 +197,19 @@ impl ReflectOn<AABB> for Ray {
 
 impl ReflectOn<Logic> for Ray {
     fn reflect_on_normal_intersect(&self, l: &Logic) -> Option<(Self, V2, P2)> {
-        self.intersect(l)
-            .map(|((p, normal), _)| (self.reflect(&p, &normal), normal.into_inner(), p))
+        self.intersect(l).map(|v| {
+            let (mut p, mut normal) = v[0];
+            let mut min_dist_sq = distance_squared(&self.origin, &p);
+            for (vp, vnormal) in v {
+                let new_dist_sq = distance_squared(&self.origin, &vp);
+                if min_dist_sq > new_dist_sq {
+                    min_dist_sq = new_dist_sq;
+                    p = vp;
+                    normal = vnormal;
+                }
+            }
+            (self.reflect(&p, &normal), normal.into_inner(), p)
+        })
     }
 }
 
@@ -345,27 +356,22 @@ impl Intersect<AABB> for Ray {
 }
 
 impl Intersect<Logic> for Ray {
-    type Intersection = ((P2, Normal), Vec<(P2, Normal)>);
+    type Intersection = Vec<(P2, Normal)>;
     fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
         let a = l.get_a();
         let b = l.get_b();
-        let is_inside = l.contains(&self.origin);
-        let isa: Option<Vec<(P2, Normal)>> = self.intersect(&a);
+        let isa = self.intersect(&a);
         let isb = self.intersect(&b);
         match l.op {
             LogicOp::And => {
-                let isa: Option<Vec<(P2, Normal)>> =
-                    isa.map(|va| va.into_iter().filter(|(pa, _)| b.contains(pa)).collect());
-                let isb: Option<Vec<(P2, Normal)>> =
-                    isb.map(|vb| vb.into_iter().filter(|(pb, _)| a.contains(pb)).collect());
-                nearest_option(&self.origin, isa, isb)
+                let isa = isa.map(|va| va.into_iter().filter(|(pa, _)| b.contains(pa)).collect());
+                let isb = isb.map(|vb| vb.into_iter().filter(|(pb, _)| a.contains(pb)).collect());
+                extend_opt_vec(isa, isb)
             }
             LogicOp::Or => {
-                if is_inside {
-                    farthest_option(&self.origin, isa, isb)
-                } else {
-                    nearest_option(&self.origin, isa, isb)
-                }
+                let isa = isa.map(|va| va.into_iter().filter(|(pa, _)| !b.contains(pa)).collect());
+                let isb = isb.map(|vb| vb.into_iter().filter(|(pb, _)| !a.contains(pb)).collect());
+                extend_opt_vec(isa, isb)
             }
             LogicOp::AndNot => {
                 let isb = isb.map(|v| {
@@ -375,7 +381,7 @@ impl Intersect<Logic> for Ray {
                         .collect()
                 });
                 let isa = isa.map(|v| v.into_iter().filter(|(p, _)| !b.contains(p)).collect());
-                nearest_option(&self.origin, isa, isb)
+                extend_opt_vec(isa, isb)
             }
         }
     }
@@ -391,7 +397,7 @@ impl Intersect<Geo> for Ray {
             Geo::GeoCircle(c) => self.intersect(c).map(|oot| oot.into_vec()),
             Geo::GeoMCircle(mc) => self.intersect(mc).map(|p| vec![p]),
             Geo::GeoPoint(_) => None,
-            Geo::GeoLogic(l) => self.intersect(l).map(|(_nearest, v)| v),
+            Geo::GeoLogic(l) => self.intersect(l),
         }
     }
 }

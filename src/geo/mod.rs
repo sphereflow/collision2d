@@ -456,7 +456,7 @@ impl Intersect<Logic> for Geo {
             }
             Geo::GeoRay(r) => r
                 .intersect(logic)
-                .map(|(_nearest, v)| v.into_iter().map(|(p, _)| p).collect()),
+                .map(|v| v.into_iter().map(|(p, _)| p).collect()),
             Geo::GeoLineSegment(ls) => logic.intersect(ls),
             Geo::GeoRect(r) => logic.intersect(r),
             Geo::GeoCircle(c) => logic.intersect(c),
