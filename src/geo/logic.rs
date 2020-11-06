@@ -33,7 +33,7 @@ impl Logic {
         ret
     }
     pub fn get_b(&self) -> Geo {
-        let mut ret = self.b.clone().as_ref().clone();
+        let mut ret = (*self.b).clone();
         let transform = Matrix2::new(self.x_axis.x, -self.x_axis.y, self.x_axis.y, self.x_axis.x);
         ret.set_origin(self.origin + transform * self.b.get_origin().coords);
         ret
