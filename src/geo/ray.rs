@@ -320,11 +320,7 @@ impl Intersect<Rect> for Ray {
         for ls in rect.line_segments().iter() {
             if let Some((v, n)) = self.intersect(ls) {
                 if let Some(oot) = closest.as_mut() {
-                    if distance_squared(&self.origin, &v)
-                        < distance_squared(&self.origin, &oot.get_first().0)
-                    {
-                        oot.add((v, n));
-                    }
+                    oot.add((v, n));
                 } else {
                     closest = Some(OneOrTwo::new((v, n)));
                 }
@@ -376,11 +372,11 @@ impl Intersect<Logic> for Ray {
             LogicOp::AndNot => {
                 let isb = isb.map(|v| {
                     v.into_iter()
-                        .map(|(p, n)| (p, -n))
-                        .filter(|(p, _)| a.contains(p))
+                        .filter(|(pb, _)| a.contains(pb))
+                        .map(|(pb, n)| (pb, -n))
                         .collect()
                 });
-                let isa = isa.map(|v| v.into_iter().filter(|(p, _)| !b.contains(p)).collect());
+                let isa = isa.map(|v| v.into_iter().filter(|(pa, _)| !b.contains(pa)).collect());
                 extend_opt_vec(isa, isb)
             }
         }
