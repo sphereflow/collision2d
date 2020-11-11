@@ -266,3 +266,9 @@ pub fn inverse(mat: &Matrix2<Float>) -> Option<Matrix2<Float>> {
     let idet = 1.0 / det;
     Some(Matrix2::new(d * idet, -b * idet, -c * idet, a * idet))
 }
+
+pub fn clockwise(p1: &V2, p2: &V2, p3: &V2) -> bool {
+    let diff: V2 = p2 - p1;
+    let perpendicular = V2::new(-diff.y, diff.x);
+    (p3 - p2).dot(&perpendicular) < 0.
+}
