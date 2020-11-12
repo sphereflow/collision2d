@@ -6,6 +6,7 @@ pub mod logic;
 pub mod mcircle;
 pub mod ray;
 pub mod rect;
+pub mod convex_polygon;
 pub mod traits;
 
 extern crate nalgebra as na;
