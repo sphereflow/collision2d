@@ -78,7 +78,7 @@ impl ConvexPolygon {
         let mut hull_points: Vec<V2> = Vec::new();
         for p in all_points {
             while hull_points.len() > 1
-                && !is_clockwise(
+                && !is_clockwise_points(
                     &hull_points[hull_points.len() - 2],
                     &hull_points[hull_points.len() - 1],
                     &p,
@@ -118,7 +118,7 @@ impl ConvexPolygon {
         // redo Graham's scan
         let mut hull_points: Vec<V2> = Vec::new();
         for p in self.points.iter() {
-            let mut is_cw = is_clockwise(
+            let mut is_cw = is_clockwise_points(
                 &hull_points[hull_points.len() - 2],
                 &hull_points[hull_points.len() - 1],
                 &p,
@@ -127,7 +127,7 @@ impl ConvexPolygon {
             let mut not_cw_once = !is_cw;
             while hull_points.len() > 1 && !is_cw {
                 hull_points.pop();
-                is_cw = is_clockwise(
+                is_cw = is_clockwise_points(
                     &hull_points[hull_points.len() - 2],
                     &hull_points[hull_points.len() - 1],
                     &p,
@@ -175,12 +175,12 @@ impl HasOrigin for ConvexPolygon {
 impl Contains for ConvexPolygon {
     fn contains(&self, p: &P2) -> bool {
         for w in self.points.windows(2) {
-            if !is_clockwise(&w[0], &w[1], &p.coords) {
+            if !is_clockwise_points(&w[0], &w[1], &p.coords) {
                 return false;
             }
         }
         if let (Some(first), Some(last)) = (self.points.first(), self.points.last()) {
-            if !is_clockwise(last, first, &p.coords) {
+            if !is_clockwise_points(last, first, &p.coords) {
                 return false;
             }
         }
@@ -204,7 +204,7 @@ impl Distance for ConvexPolygon {
 
         // if self contains p negate the result
         if let Some((ls, md)) = min_dist {
-            if is_clockwise(&ls.get_a().coords, &ls.get_b().coords, &p.coords) {
+            if is_clockwise_points(&ls.get_a().coords, &ls.get_b().coords, &p.coords) {
                 md * -1.
             } else {
                 md
