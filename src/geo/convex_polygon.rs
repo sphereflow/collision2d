@@ -35,13 +35,23 @@ impl ConvexPolygon {
         right.retain(|p| p.x >= 0.);
         // sort the left side bottom to top (semi clockwise)
         left.sort_unstable_by(|p1, p2| {
-            p1.y.partial_cmp(&p2.y)
-                .expect("convex hull: could not sort left side")
+            if p1.y == p2.y {
+                p1.x.partial_cmp(&p2.x)
+                    .expect("convex hull: could not sort left side")
+            } else {
+                p1.y.partial_cmp(&p2.y)
+                    .expect("convex hull: could not sort left side")
+            }
         });
         // sort the right side top to bottom
         right.sort_unstable_by(|p1, p2| {
-            p2.y.partial_cmp(&p1.y)
-                .expect("convex hull: could not sort right side")
+            if p1.y == p2.y {
+                p2.x.partial_cmp(&p1.x)
+                    .expect("convex hull: could not sort left side")
+            } else {
+                p2.y.partial_cmp(&p1.y)
+                    .expect("convex hull: could not sort right side")
+            }
         });
         right.extend(left.into_iter());
         let all_points = right;
