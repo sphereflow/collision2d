@@ -1,23 +1,40 @@
 use super::*;
 
 pub struct ConvexPolygon {
-    /// the origin of the convex polygon
-    origin: P2,
-    /// x_axis for rotation
+    /// X_axis for rotation
     x_axis: V2,
-    /// points relative to origin sorted in clockwise direction
+    /// Bounding box
+    aabb: AABB,
+    /// Points relative to origin sorted in clockwise direction
     points: Vec<V2>,
 }
 
-use std::ops::Add;
 impl ConvexPolygon {
     pub fn new_convex_hull(points: &Vec<P2>) -> Self {
         let mut all_points: Vec<V2> = points.iter().map(|p| p.coords).collect();
-        let mut origin: V2 = all_points.iter().fold(V2::new(0., 0.), V2::add);
-        origin /= points.len() as Float;
+
+        // calculate the bounding box
+        let mut min_x = Float::MIN;
+        let mut min_y = Float::MIN;
+        let mut max_x = Float::MAX;
+        let mut max_y = Float::MAX;
+        for p in all_points.iter() {
+            match (p.x < min_x, p.x > max_x) {
+                (true, _) => min_x = p.x,
+                (_, true) => max_x = p.x,
+                _ => {}
+            }
+            match (p.y < min_y, p.y > max_y) {
+                (true, _) => min_y = p.y,
+                (_, true) => max_y = p.y,
+                _ => {}
+            }
+        }
+        let aabb = AABB::from_tlbr(max_y, min_x, min_y, max_x);
+
         for point in all_points.iter_mut() {
-            point.x -= origin.x;
-            point.y -= origin.y;
+            point.x -= aabb.origin.x;
+            point.y -= aabb.origin.y;
         }
 
         // split all_points into left (x-component < 0) and right (x-component >= 0)
@@ -72,18 +89,21 @@ impl ConvexPolygon {
             hull_points.push(p);
         }
 
-        let mut res = ConvexPolygon {
-            origin: P2::from(origin),
+        ConvexPolygon {
             x_axis: V2::new(1., 0.),
+            aabb,
             points: hull_points,
-        };
-        res.recompute_origin();
-        res
+        }
     }
 
     pub fn add_point(&mut self, p: &P2) {
-        let p = p - self.origin;
+        // adapt aabb
+        //
+        self.aabb.add_point(p);
+
+        let p = p - self.get_origin();
         // sort in p
+        //
         for ix in 0..self.points.len() {
             if let Some(snd) = self.points.get(ix + 1) {
                 if between(p.y, self.points[ix].y, snd.y) {
@@ -123,26 +143,21 @@ impl ConvexPolygon {
             }
         }
         self.points = hull_points;
-        self.recompute_origin();
-    }
-
-    fn recompute_origin(&mut self) {
-        let mut offset: V2 = self.points.iter().fold(V2::new(0., 0.), V2::add);
-        offset /= self.points.len() as Float;
-        for p in self.points.iter_mut() {
-            p.x -= offset.x;
-            p.y -= offset.y;
-        }
-        self.origin += offset;
     }
 
     pub fn get_line_segments(&self) -> Vec<LineSegment> {
         let mut res = Vec::with_capacity(self.points.len());
         for w in self.points.windows(2) {
-            res.push(LineSegment::from_ab(self.origin + w[0], self.origin + w[1]));
+            res.push(LineSegment::from_ab(
+                self.get_origin() + w[0],
+                self.get_origin() + w[1],
+            ));
         }
         if let (Some(p1), Some(p2)) = (self.points.last(), self.points.first()) {
-            res.push(LineSegment::from_ab(self.origin + p1, self.origin + p2));
+            res.push(LineSegment::from_ab(
+                self.get_origin() + p1,
+                self.get_origin() + p2,
+            ));
         }
         res
     }
@@ -150,10 +165,10 @@ impl ConvexPolygon {
 
 impl HasOrigin for ConvexPolygon {
     fn get_origin(&self) -> P2 {
-        self.origin
+        self.aabb.origin
     }
     fn set_origin(&mut self, origin: P2) {
-        self.origin = origin;
+        self.aabb.origin = origin;
     }
 }
 
@@ -231,7 +246,7 @@ impl Scale for ConvexPolygon {
         }
     }
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
-        self.origin.x *= scale_x;
-        self.origin.y *= scale_y;
+        self.aabb.origin.x *= scale_x;
+        self.aabb.origin.y *= scale_y;
     }
 }

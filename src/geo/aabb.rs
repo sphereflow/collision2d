@@ -22,6 +22,51 @@ impl AABB {
         ]
     }
 
+    pub fn get_left(&self) -> Float {
+        self.origin.x - 0.5 * self.width
+    }
+
+    pub fn get_right(&self) -> Float {
+        self.origin.x + 0.5 * self.width
+    }
+
+    pub fn get_bottom(&self) -> Float {
+        self.origin.y - 0.5 * self.height
+    }
+
+    pub fn get_top(&self) -> Float {
+        self.origin.y + 0.5 * self.height
+    }
+
+    pub fn add_point(&mut self, p: &P2) {
+        let left = self.get_left();
+        let right = self.get_right();
+        let bottom = self.get_bottom();
+        let top = self.get_top();
+        match (p.x < left, p.x > right) {
+            (true, _) => {
+                self.origin.x = (p.x + right) * 0.5;
+                self.width = right - p.x;
+            }
+            (_, true) => {
+                self.origin.x = (left + p.x) * 0.5;
+                self.width = p.x - left;
+            }
+            _ => {}
+        }
+        match (p.y < bottom, p.y > top) {
+            (true, _) => {
+                self.origin.y = (p.y + top) * 0.5;
+                self.height = top - p.y;
+            }
+            (_, true) => {
+                self.origin.y = (bottom + p.y) * 0.5;
+                self.height = p.y - bottom;
+            }
+            _ => {}
+        }
+    }
+
     pub fn line_segments(&self) -> RectLineSegments {
         let [a, b, c, d] = self.points();
         [
@@ -43,6 +88,15 @@ impl AABB {
 
     pub fn separated_by(&self, l: &Line) -> bool {
         self.to_rect().seperated_by_line(l)
+    }
+
+    pub fn from_tlbr(top: Float, left: Float, bottom: Float, right: Float) -> AABB {
+        let origin = P2::new((left + right) * 0.5, (bottom + top) * 0.5);
+        AABB {
+            origin,
+            width: (right - left).abs(),
+            height: (top - bottom).abs(),
+        }
     }
 }
 
