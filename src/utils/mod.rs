@@ -1,5 +1,5 @@
 extern crate nalgebra as na;
-use na::{distance, Matrix2, Point2, Unit, Vector2};
+use na::{distance, Matrix2, Point2, Rotation2, Unit, Vector2};
 
 pub type Float = f64;
 pub type P2 = Point2<Float>;
@@ -276,4 +276,10 @@ pub fn is_clockwise_points(p1: &V2, p2: &V2, p3: &V2) -> bool {
 pub fn is_clockwise_directions(d1: &V2, d2: &V2) -> bool {
     let perpendicular = V2::new(-d1.y, d1.x);
     d2.dot(&perpendicular) < 0.
+}
+
+/// This function returns a Vec of pairs (projected points x-value, index into points)
+pub fn separation_axis_projection(origin: &P2, direction: &U2, points: &Vec<P2>) -> Vec<Float> {
+    let rot = Rotation2::rotation_between(direction, &U2::new_unchecked(V2::new(0., 1.)));
+    points.iter().map(|p| (rot * (p - origin)).x).collect()
 }
