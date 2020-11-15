@@ -278,8 +278,13 @@ pub fn is_clockwise_directions(d1: &V2, d2: &V2) -> bool {
     d2.dot(&perpendicular) < 0.
 }
 
-/// This function returns a Vec of pairs (projected points x-value, index into points)
-pub fn separation_axis_projection(origin: &P2, direction: &U2, points: &Vec<P2>) -> Vec<Float> {
+/// This function returns the projected points x-value
+pub fn separation_axis_projection(origin: &P2, direction: &U2, p: &P2) -> Float {
     let rot = Rotation2::rotation_between(direction, &U2::new_unchecked(V2::new(0., 1.)));
-    points.iter().map(|p| (rot * (p - origin)).x).collect()
+    (rot * (p - origin)).x
+}
+
+/// This function returns the global coordinates of a local point with its rotation and origin
+pub fn local_to_global(origin: &P2, rotation: &Rotation2<Float>, p: &V2) -> P2 {
+    origin + rotation * p
 }
