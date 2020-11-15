@@ -55,11 +55,11 @@ impl ConvexPolygon {
         // sort the left side bottom to top (semi clockwise)
         left.sort_unstable_by(|p1, p2| {
             if p1.y == p2.y {
-              // high to low
+                // high to low
                 p2.x.partial_cmp(&p1.x)
                     .expect("convex hull: could not sort left side")
             } else {
-              // low to high
+                // low to high
                 p1.y.partial_cmp(&p2.y)
                     .expect("convex hull: could not sort left side")
             }
@@ -71,7 +71,7 @@ impl ConvexPolygon {
                 p1.x.partial_cmp(&p2.x)
                     .expect("convex hull: could not sort left side")
             } else {
-              // high to low
+                // high to low
                 p2.y.partial_cmp(&p1.y)
                     .expect("convex hull: could not sort right side")
             }
@@ -167,9 +167,12 @@ impl ConvexPolygon {
         res
     }
 
-    pub fn get_global_points(&self) -> Vec<P2>{
-      let rot = Rotation2::rotation_between(&U2::new_unchecked(V2::new(1., 0.)), &self.x_axis);
-      self.points.iter().map(|p| self.get_origin() + (rot * p)).collect()
+    pub fn get_global_points(&self) -> Vec<P2> {
+        let rot = Rotation2::rotation_between(&U2::new_unchecked(V2::new(1., 0.)), &self.x_axis);
+        self.points
+            .iter()
+            .map(|p| self.get_origin() + (rot * p))
+            .collect()
     }
 }
 
@@ -253,5 +256,39 @@ impl Scale for ConvexPolygon {
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
         self.aabb.origin.x *= scale_x;
         self.aabb.origin.y *= scale_y;
+    }
+}
+
+impl<T: HasOrigin + HasDirection + Intersect<LineSegment, Intersection = P2>> Intersect<T> for ConvexPolygon {
+    type Intersection = OneOrTwo<(P2, Normal)>;
+    fn intersect(&self, l: &T) -> Option<Self::Intersection> {
+        let global_points = self.get_global_points();
+        let mut res: Option<OneOrTwo<(P2, Normal)>> = None;
+        for w in global_points
+            .iter()
+            .map(|p| {
+                separation_axis_projection(&l.get_origin(), &l.get_direction(), p)
+            })
+            .enumerate()
+            .collect::<Vec<_>>()
+            .windows(2)
+        {
+            let (ixa, pra) = w[0];
+            let (ixb, prb) = w[1];
+            if pra * prb < 0. {
+                let ls = LineSegment::from_ab(global_points[ixa], global_points[ixb]);
+                if let Some(p) = l.intersect(&ls) {
+                    let n = ls.get_normal();
+                    if let Some(oot) = res.as_mut() {
+                        oot.add((p, n));
+                        // we got our second point -> break
+                        break;
+                    } else {
+                        res = Some(OneOrTwo::new((p, n)));
+                    }
+                }
+            }
+        }
+        res
     }
 }
