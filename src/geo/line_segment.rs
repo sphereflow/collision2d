@@ -47,21 +47,6 @@ impl LineSegment {
         self.b
     }
 
-    pub fn get_normal(&self) -> Normal {
-        self.normal
-    }
-
-    pub fn get_direction(&self) -> U2 {
-        self.direction
-    }
-
-    pub fn set_direction(&mut self, direction: V2) {
-        self.b = self.a + direction;
-        self.direction = Unit::new_normalize(direction);
-        // normal is rotated counter clockwise
-        self.normal = Unit::new_normalize(V2::new(-direction.y, direction.x))
-    }
-
     pub fn shorten_towards_b(&mut self, factor: Float) {
         let ab = self.b - self.a;
         self.a += ab * (1.0 - factor);
@@ -90,6 +75,27 @@ impl HasOrigin for LineSegment {
         let old_pos = self.get_origin();
         self.a = P2::from(self.a + origin.coords - old_pos);
         self.b = self.a + dir;
+    }
+}
+
+impl HasDirection for LineSegment {
+    fn get_direction(&self) -> U2 {
+        self.direction
+    }
+
+    fn set_direction(&mut self, direction: U2) {
+        self.normal = Unit::new_unchecked(V2::new(-direction.y, direction.x));
+        self.direction = direction;
+    }
+}
+
+impl HasNormal for LineSegment {
+    fn get_normal(&self) -> Normal {
+        self.normal
+    }
+    fn set_normal(&mut self, normal: Normal) {
+        self.normal = normal;
+        self.direction = Unit::new_unchecked(V2::new(normal.y, -normal.x));
     }
 }
 

@@ -28,14 +28,6 @@ impl Ray {
         Line::new_unchecked(self.origin, self.direction, self.normal)
     }
 
-    pub fn get_origin(&self) -> P2 {
-        self.origin
-    }
-
-    pub fn set_origin(&mut self, origin: P2) {
-        self.origin = origin;
-    }
-
     pub fn shift(&mut self, v: V2) {
         self.origin += v;
     }
@@ -46,20 +38,6 @@ impl Ray {
             direction: self.direction,
             normal: self.normal,
         }
-    }
-
-    pub fn get_normal(&self) -> Normal {
-        self.normal
-    }
-
-    pub fn get_direction(&self) -> V2 {
-        self.direction.into_inner()
-    }
-
-    pub fn set_direction(&mut self, direction: V2) {
-        self.direction = Unit::new_normalize(direction);
-        // normal is rotated counter clockwise
-        self.normal = Unit::new_normalize(V2::new(-direction.y, direction.x))
     }
 
     pub fn eval_at_r(&self, r: Float) -> P2 {
@@ -407,12 +385,33 @@ impl HasOrigin for Ray {
     }
 }
 
+impl HasDirection for Ray {
+    fn get_direction(&self) -> U2 {
+        self.direction
+    }
+
+    fn set_direction(&mut self, direction: U2) {
+        self.normal = Unit::new_unchecked(V2::new(-direction.y, direction.x));
+        self.direction = direction;
+    }
+}
+
+impl HasNormal for Ray {
+    fn get_normal(&self) -> Normal {
+        self.normal
+    }
+    fn set_normal(&mut self, normal: Normal) {
+        self.normal = normal;
+        self.direction = Unit::new_unchecked(V2::new(normal.y, -normal.x));
+    }
+}
+
 impl Rotate for Ray {
     fn get_rotation(&self) -> V2 {
-        self.get_direction()
+        self.get_direction().into_inner()
     }
     fn set_rotation(&mut self, x_axis: &V2) {
-        self.set_direction(*x_axis);
+        self.set_direction(Unit::new_normalize(*x_axis));
     }
 }
 
@@ -430,7 +429,7 @@ impl ClosestPoint for Ray {
         if r < 0. {
             self.origin
         } else {
-            self.origin + r * self.get_direction()
+            self.origin + r * self.get_direction().into_inner()
         }
     }
 }

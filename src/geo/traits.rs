@@ -17,6 +17,16 @@ impl HasOrigin for P2 {
     }
 }
 
+pub trait HasNormal {
+    fn get_normal(&self) -> Normal;
+    fn set_normal(&mut self, normal: Normal);
+}
+
+pub trait HasDirection {
+    fn get_direction(&self) -> U2;
+    fn set_direction(&mut self, direction: U2);
+}
+
 /// wether a shape contains a point
 pub trait Contains {
     fn contains(&self, p: &P2) -> bool;

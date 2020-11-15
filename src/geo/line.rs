@@ -28,19 +28,6 @@ impl Line {
         }
     }
 
-    pub fn get_normal(&self) -> Normal {
-        self.normal
-    }
-
-    pub fn get_direction(&self) -> V2 {
-        self.direction.into_inner()
-    }
-
-    pub fn set_direction(&mut self, direction: V2) {
-        self.normal = Unit::new_normalize(V2::new(-direction.y, direction.x));
-        self.direction = Unit::new_normalize(direction);
-    }
-
     pub fn eval_at(&self, r: Float) -> P2 {
         self.origin + r * self.direction.into_inner()
     }
@@ -55,6 +42,27 @@ impl HasOrigin for Line {
     }
 }
 
+impl HasDirection for Line {
+    fn get_direction(&self) -> U2 {
+        self.direction
+    }
+
+    fn set_direction(&mut self, direction: U2) {
+        self.normal = Unit::new_unchecked(V2::new(-direction.y, direction.x));
+        self.direction = direction;
+    }
+}
+
+impl HasNormal for Line {
+    fn get_normal(&self) -> Normal {
+        self.normal
+    }
+    fn set_normal(&mut self, normal: Normal) {
+        self.normal = normal;
+        self.direction = Unit::new_unchecked(V2::new(normal.y, -normal.x));
+    }
+}
+
 impl Scale for Line {
     fn scale(&mut self, _scale_x: Float, _scale_y: Float) {}
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
@@ -66,7 +74,7 @@ impl From<&Ray> for Line {
     fn from(ray: &Ray) -> Line {
         Line {
             origin: ray.get_origin(),
-            direction: Unit::new_normalize(ray.get_direction()),
+            direction: ray.get_direction(),
             normal: ray.get_normal(),
         }
     }
@@ -140,7 +148,10 @@ impl ReflectOn<Line> for Line {
 
 impl ReflectOn<Ray> for Line {
     fn reflect_on_normal_intersect(&self, other: &Ray) -> Option<(Self, V2, P2)> {
-        let dmat = Matrix2::from_columns(&[self.direction.into_inner(), -other.get_direction()]);
+        let dmat = Matrix2::from_columns(&[
+            self.direction.into_inner(),
+            -other.get_direction().into_inner(),
+        ]);
         match inverse(&dmat) {
             Some(inv) => {
                 let n = other.get_normal().into_inner();
@@ -181,7 +192,7 @@ impl ReflectOn<LineSegment> for Line {
                 if rs[1] < 0. || rs[1] > 1. {
                     return None;
                 }
-                let intersection = self.origin + self.get_direction() * rs.x;
+                let intersection = self.origin + self.get_direction().into_inner() * rs.x;
                 let c1 = n.x * n.x - n.y * n.y;
                 let c2 = 2. * n.x * n.y;
                 let reflected = V2::new(
@@ -204,7 +215,7 @@ impl ReflectOn<LineSegment> for Line {
 impl ClosestPoint for Line {
     fn closest_point_to(&self, p: &P2) -> P2 {
         let po = p - self.origin;
-        self.origin + self.direction.dot(&po) * self.get_direction()
+        self.origin + self.direction.dot(&po) * self.get_direction().into_inner()
     }
 }
 
