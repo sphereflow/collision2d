@@ -6,6 +6,8 @@ pub struct ConvexPolygon {
     /// Bounding box
     aabb: AABB,
     /// Points relative to origin sorted in clockwise direction
+    /// The first and last point should be the same to make functions witch call
+    /// points.iter().windows(2) easier to implement
     points: Vec<V2>,
 }
 
@@ -53,9 +55,11 @@ impl ConvexPolygon {
         // sort the left side bottom to top (semi clockwise)
         left.sort_unstable_by(|p1, p2| {
             if p1.y == p2.y {
-                p1.x.partial_cmp(&p2.x)
+              // high to low
+                p2.x.partial_cmp(&p1.x)
                     .expect("convex hull: could not sort left side")
             } else {
+              // low to high
                 p1.y.partial_cmp(&p2.y)
                     .expect("convex hull: could not sort left side")
             }
@@ -63,14 +67,21 @@ impl ConvexPolygon {
         // sort the right side top to bottom
         right.sort_unstable_by(|p1, p2| {
             if p1.y == p2.y {
-                p2.x.partial_cmp(&p1.x)
+                // low to high
+                p1.x.partial_cmp(&p2.x)
                     .expect("convex hull: could not sort left side")
             } else {
+              // high to low
                 p2.y.partial_cmp(&p1.y)
                     .expect("convex hull: could not sort right side")
             }
         });
         right.extend(left.into_iter());
+
+        // first point == last point
+        //
+        right.push(right[0]);
+
         let all_points = right;
 
         // Graham scan
@@ -153,13 +164,12 @@ impl ConvexPolygon {
                 self.get_origin() + w[1],
             ));
         }
-        if let (Some(p1), Some(p2)) = (self.points.last(), self.points.first()) {
-            res.push(LineSegment::from_ab(
-                self.get_origin() + p1,
-                self.get_origin() + p2,
-            ));
-        }
         res
+    }
+
+    pub fn get_global_points(&self) -> Vec<P2>{
+      let rot = Rotation2::rotation_between(&U2::new_unchecked(V2::new(1., 0.)), &self.x_axis);
+      self.points.iter().map(|p| self.get_origin() + (rot * p)).collect()
     }
 }
 
