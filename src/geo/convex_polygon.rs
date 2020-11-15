@@ -189,11 +189,6 @@ impl Contains for ConvexPolygon {
                 return false;
             }
         }
-        if let (Some(first), Some(last)) = (self.points.first(), self.points.last()) {
-            if !is_clockwise_points(last, first, &p.coords) {
-                return false;
-            }
-        }
         true
     }
 }
