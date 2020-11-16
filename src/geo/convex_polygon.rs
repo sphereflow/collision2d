@@ -259,16 +259,16 @@ impl Scale for ConvexPolygon {
     }
 }
 
-impl<T: HasOrigin + HasDirection + Intersect<LineSegment, Intersection = P2>> Intersect<T> for ConvexPolygon {
+impl<T: HasOrigin + HasDirection + Intersect<LineSegment, Intersection = P2>> Intersect<T>
+    for ConvexPolygon
+{
     type Intersection = OneOrTwo<(P2, Normal)>;
     fn intersect(&self, l: &T) -> Option<Self::Intersection> {
         let global_points = self.get_global_points();
         let mut res: Option<OneOrTwo<(P2, Normal)>> = None;
         for w in global_points
             .iter()
-            .map(|p| {
-                separation_axis_projection(&l.get_origin(), &l.get_direction(), p)
-            })
+            .map(|p| separation_axis_projection(&l.get_origin(), &l.get_direction(), p))
             .enumerate()
             .collect::<Vec<_>>()
             .windows(2)
@@ -294,15 +294,13 @@ impl<T: HasOrigin + HasDirection + Intersect<LineSegment, Intersection = P2>> In
 }
 
 impl Intersect<Ray> for ConvexPolygon {
-  type Intersection = OneOrTwo<(P2, Normal)>;
-  fn intersect(&self, ray: &Ray) -> Option<Self::Intersection> {
+    type Intersection = OneOrTwo<(P2, Normal)>;
+    fn intersect(&self, ray: &Ray) -> Option<Self::Intersection> {
         let global_points = self.get_global_points();
         let mut res: Option<OneOrTwo<(P2, Normal)>> = None;
         for w in global_points
             .iter()
-            .map(|p| {
-                separation_axis_projection(&ray.get_origin(), &ray.get_direction(), p)
-            })
+            .map(|p| separation_axis_projection(&ray.get_origin(), &ray.get_direction(), p))
             .enumerate()
             .collect::<Vec<_>>()
             .windows(2)
@@ -323,5 +321,27 @@ impl Intersect<Ray> for ConvexPolygon {
             }
         }
         res
-  }
+    }
+}
+
+impl Intersect<Circle> for ConvexPolygon {
+    type Intersection = OneOrTwo<P2>;
+    fn intersect(&self, circle: &Circle) -> Option<Self::Intersection> {
+        let mut res: Option<Self::Intersection> = None;
+        for ls in self.get_line_segments() {
+            if let Some(i) = circle.intersect(&ls) {
+                if i.get_second().is_some() {
+                    res = Some(i);
+                    break;
+                }
+                if let Some(oot) = res.as_mut() {
+                    oot.add(i.get_first());
+                    break;
+                } else {
+                    res = Some(i);
+                }
+            }
+        }
+        res
+    }
 }
