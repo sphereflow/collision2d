@@ -292,3 +292,36 @@ impl<T: HasOrigin + HasDirection + Intersect<LineSegment, Intersection = P2>> In
         res
     }
 }
+
+impl Intersect<Ray> for ConvexPolygon {
+  type Intersection = OneOrTwo<(P2, Normal)>;
+  fn intersect(&self, ray: &Ray) -> Option<Self::Intersection> {
+        let global_points = self.get_global_points();
+        let mut res: Option<OneOrTwo<(P2, Normal)>> = None;
+        for w in global_points
+            .iter()
+            .map(|p| {
+                separation_axis_projection(&ray.get_origin(), &ray.get_direction(), p)
+            })
+            .enumerate()
+            .collect::<Vec<_>>()
+            .windows(2)
+        {
+            let (ixa, pra) = w[0];
+            let (ixb, prb) = w[1];
+            if pra * prb < 0. {
+                let ls = LineSegment::from_ab(global_points[ixa], global_points[ixb]);
+                if let Some(pn) = ray.intersect(&ls) {
+                    if let Some(oot) = res.as_mut() {
+                        oot.add(pn);
+                        // we got our second point -> break
+                        break;
+                    } else {
+                        res = Some(OneOrTwo::new(pn));
+                    }
+                }
+            }
+        }
+        res
+  }
+}
