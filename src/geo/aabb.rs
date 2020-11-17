@@ -80,7 +80,7 @@ impl AABB {
     pub fn to_rect(&self) -> Rect {
         Rect {
             origin: self.origin,
-            x_axis: Unit::new_unchecked(V2::new(1.0, 0.0)),
+            rotation: Rot2::identity(),
             width: self.width,
             height: self.height,
         }

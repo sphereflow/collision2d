@@ -135,10 +135,10 @@ impl Scale for Circle {
 }
 
 impl Rotate for Circle {
-    fn get_rotation(&self) -> V2 {
-        V2::new(1., 0.)
+    fn get_rotation(&self) -> Rot2 {
+      Rot2::identity()
     }
-    fn set_rotation(&mut self, _x_axis: &V2) {}
+    fn set_rotation(&mut self, _rotation: &Rot2) {}
 }
 
 impl Contains for Circle {

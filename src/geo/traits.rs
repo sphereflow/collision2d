@@ -52,10 +52,24 @@ pub trait Rotate
 where
     Self: HasOrigin,
 {
-    fn get_rotation(&self) -> V2;
-    fn set_rotation(&mut self, x_axis: &V2);
-    fn look_at(&mut self, p: &P2) {
-        self.set_rotation(&(p - self.get_origin()));
+    fn get_rotation(&self) -> Rot2;
+    fn set_rotation(&mut self, rotation: &Rot2);
+    fn x_axis_look_at(&mut self, p: &P2) {
+        let rotation = Rot2::rotation_between(&V2::new(1., 0.), &(p - self.get_origin()));
+        self.set_rotation(&rotation);
+    }
+    fn y_axis_look_at(&mut self, p: &P2) {
+        let rotation = Rot2::rotation_between(&V2::new(0., 1.), &(p - self.get_origin()));
+        self.set_rotation(&rotation);
+    }
+    fn get_x_axis(&self) -> V2 {
+        self.get_rotation().matrix().column(0).into()
+    }
+    fn get_y_axis(&self) -> V2 {
+        self.get_rotation().matrix().column(1).into()
+    }
+    fn rotate(&mut self, rotation: &Rot2) {
+        self.set_rotation(&(rotation * self.get_rotation()));
     }
     fn rotate_point_around_origin(&self, p: &P2) -> P2 {
         let origin = self.get_origin();
@@ -63,9 +77,7 @@ where
     }
     /// rotation from local to global
     fn rotate_point(&self, p: &P2) -> P2 {
-        let x_axis = self.get_rotation();
-        let rotation_matrix = Matrix2::new(x_axis.x, -x_axis.y, x_axis.y, x_axis.x);
-        rotation_matrix * p
+        self.get_rotation() * p
     }
     /// tranformation from local to global
     fn transform(&self, p: &P2) -> P2 {
@@ -73,11 +85,22 @@ where
     }
 }
 
+impl<T: HasDirection + HasOrigin> Rotate for T {
+  fn get_rotation(&self) -> Rot2 {
+      let d = self.get_direction();
+      // normal.x = -d.y normal.y = d.x
+      Rot2::from_matrix_unchecked(Matrix2::new(d.x, -d.y, d.y, d.x))
+  }
+  fn set_rotation(&mut self, rotation: &Rot2) {
+        self.set_direction(Unit::new_unchecked(rotation.matrix().column(0).into()));
+  }
+}
+
 impl Rotate for P2 {
-    fn get_rotation(&self) -> V2 {
-        V2::new(1., 0.)
+    fn get_rotation(&self) -> Rot2 {
+        Rot2::identity()
     }
-    fn set_rotation(&mut self, _x_axis: &V2) {}
+    fn set_rotation(&mut self, _rotation: &Rot2) {}
 }
 
 pub trait Scale {

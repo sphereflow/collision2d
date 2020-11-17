@@ -2,7 +2,7 @@ use super::*;
 
 pub struct ConvexPolygon {
     /// X_axis for rotation
-    x_axis: V2,
+    rotation: Rot2,
     /// Bounding box
     aabb: AABB,
     /// Points relative to origin sorted in clockwise direction
@@ -101,7 +101,7 @@ impl ConvexPolygon {
         }
 
         ConvexPolygon {
-            x_axis: V2::new(1., 0.),
+            rotation: Rot2::identity(),
             aabb,
             points: hull_points,
         }
@@ -168,7 +168,7 @@ impl ConvexPolygon {
     }
 
     pub fn get_global_points(&self) -> Vec<P2> {
-        let rot = Rotation2::rotation_between(&U2::new_unchecked(V2::new(1., 0.)), &self.x_axis);
+        let rot = self.get_rotation();
         self.points
             .iter()
             .map(|p| self.get_origin() + (rot * p))
@@ -238,11 +238,11 @@ impl ClosestPoint for ConvexPolygon {
 }
 
 impl Rotate for ConvexPolygon {
-    fn get_rotation(&self) -> V2 {
-        self.x_axis
+    fn get_rotation(&self) -> Rot2 {
+        self.rotation
     }
-    fn set_rotation(&mut self, x_axis: &V2) {
-        self.x_axis = *x_axis;
+    fn set_rotation(&mut self, rotation: &Rot2) {
+        self.rotation = *rotation;
     }
 }
 

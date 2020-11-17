@@ -50,22 +50,21 @@ impl HasOrigin for Logic {
 }
 
 impl Rotate for Logic {
-    fn get_rotation(&self) -> V2 {
+    fn get_rotation(&self) -> Rot2 {
         let ab = self.b.get_origin() - self.a.get_origin();
-        V2::new(-ab.y, ab.x)
+        // xx yx -> xx -xy
+        // xy yy    xy xx
+        Rot2::from_matrix(&Matrix2::new(-ab.y, -ab.x, ab.x, -ab.y))
     }
-    fn set_rotation(&mut self, x_axis: &V2) {
-        let rotation = Rotation2::rotation_between(&self.get_rotation(), x_axis);
-
+    fn set_rotation(&mut self, rotation: &Rot2) {
+        let rotation = Rot2::rotation_between(&self.get_x_axis(), &rotation.matrix().column(0));
         self.a
             .set_origin(rotation.transform_point(&self.a.get_origin()));
-        let rotation_axis_a = rotation * self.a.get_rotation();
-        self.a.set_rotation(&rotation_axis_a);
+        self.a.rotate(&rotation);
 
         self.b
             .set_origin(rotation.transform_point(&self.b.get_origin()));
-        let rotation_axis_b = rotation * self.b.get_rotation();
-        self.b.set_rotation(&rotation_axis_b);
+        self.b.rotate(&rotation);
     }
 }
 

@@ -231,7 +231,7 @@ impl Distance for Geo {
 }
 
 impl Rotate for Geo {
-    fn get_rotation(&self) -> V2 {
+    fn get_rotation(&self) -> Rot2 {
         match self {
             Geo::GeoRect(geo) => geo.get_rotation(),
             Geo::GeoCircle(geo) => geo.get_rotation(),
@@ -242,7 +242,7 @@ impl Rotate for Geo {
             Geo::GeoLogic(geo) => geo.get_rotation(),
         }
     }
-    fn set_rotation(&mut self, x_axis: &V2) {
+    fn set_rotation(&mut self, x_axis: &Rot2) {
         match self {
             Geo::GeoRect(geo) => geo.set_rotation(x_axis),
             Geo::GeoCircle(geo) => geo.set_rotation(x_axis),

@@ -406,15 +406,6 @@ impl HasNormal for Ray {
     }
 }
 
-impl Rotate for Ray {
-    fn get_rotation(&self) -> V2 {
-        self.get_direction().into_inner()
-    }
-    fn set_rotation(&mut self, x_axis: &V2) {
-        self.set_direction(Unit::new_normalize(*x_axis));
-    }
-}
-
 impl Scale for Ray {
     fn scale(&mut self, _scale_x: Float, _scale_y: Float) {}
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {

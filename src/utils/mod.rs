@@ -6,6 +6,7 @@ pub type P2 = Point2<Float>;
 pub type V2 = Vector2<Float>;
 pub type U2 = Unit<V2>;
 pub type Normal = Unit<V2>;
+pub type Rot2 = Rotation2<Float>;
 pub const EPSILON: Float = 0.000_001;
 
 pub struct OneOrTwo<T: Copy + Clone> {

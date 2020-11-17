@@ -5,7 +5,7 @@ use super::*;
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Rect {
     pub origin: P2,
-    pub x_axis: Normal,
+    pub rotation: Rot2,
     pub width: Float,
     pub height: Float,
 }
@@ -15,10 +15,10 @@ pub type RectPoints = [P2; 4];
 pub type RectLineSegments = [LineSegment; 4];
 
 impl Rect {
-    pub fn new(origin: P2, x_axis: V2, width: Float, height: Float) -> Rect {
+    pub fn new(origin: P2, rotation: Rot2, width: Float, height: Float) -> Rect {
         Rect {
             origin,
-            x_axis: Unit::new_normalize(x_axis),
+            rotation,
             width: width.abs(),
             height: height.abs(),
         }
@@ -27,25 +27,16 @@ impl Rect {
     pub fn from_tlbr(top: Float, left: Float, bottom: Float, right: Float) -> Self {
         Rect {
             origin: P2::new((left + right) * 0.5, (top + bottom) * 0.5),
-            x_axis: Unit::new_unchecked(V2::new(1.0, 0.0)),
+            rotation: Rot2::identity(),
             width: (right - left).abs(),
             height: (top - bottom).abs(),
         }
     }
 
-    pub fn set_x_axis(&mut self, v: V2) {
-        if !(v[0] == 0.0 && v[1] == 0.0) {
-            self.x_axis = Unit::new_normalize(v);
-        }
-    }
-
-    pub fn get_y_axis(&self) -> V2 {
-        V2::new(-self.x_axis.y, self.x_axis.x)
-    }
-
     pub fn points(&self) -> RectPoints {
-        let y_offset = V2::new(-self.x_axis.y, self.x_axis.x) * self.height * 0.5;
-        let x_offset = self.x_axis.into_inner() * self.width * 0.5;
+        let x_axis = self.get_x_axis();
+        let y_offset = V2::new(-x_axis.y, x_axis.x) * self.height * 0.5;
+        let x_offset = x_axis * self.width * 0.5;
         let top_right = x_offset + y_offset;
         let bottom_right = x_offset - y_offset;
         [
@@ -118,17 +109,11 @@ impl Rect {
     }
 
     pub fn separates_rect(&self, other: &Rect) -> bool {
-        // get projection matrix + inverse
-        // projection => inverse projection => inverse projection in terms of self.x_axis
-        // xx yx =>      xx xy =>              xx xy
-        // xy yy         yx yy                -xy xx
-        let inv_projection =
-            Matrix2::new(self.x_axis.x, self.x_axis.y, -self.x_axis.y, self.x_axis.x);
         // transform points of other
         let (xs, ys): (Vec<Float>, Vec<Float>) = other
             .points()
             .iter()
-            .map(|p| inv_projection * (p - self.origin))
+            .map(|p| self.get_rotation().inverse() * (p - self.origin))
             .map(|p| (p.x, p.y))
             .unzip();
         // check x <==> width , y <==> height
@@ -215,11 +200,11 @@ impl HasOrigin for Rect {
 }
 
 impl Rotate for Rect {
-    fn get_rotation(&self) -> V2 {
-        self.x_axis.into_inner()
+    fn get_rotation(&self) -> Rot2 {
+        self.rotation
     }
-    fn set_rotation(&mut self, x_axis: &V2) {
-        self.x_axis = Unit::new_normalize(*x_axis);
+    fn set_rotation(&mut self, rotation: &Rot2) {
+        self.rotation = *rotation
     }
 }
 
@@ -236,13 +221,12 @@ impl Scale for Rect {
 
 impl Contains for Rect {
     fn contains(&self, p: &P2) -> bool {
-        let rot = Rotation2::rotation_between(&self.x_axis, &V2::new(1.0, 0.0));
         AABB {
             origin: P2::new(0.0, 0.0),
             width: self.width,
             height: self.height,
         }
-        .contains(&(rot * P2::from(p - self.origin)))
+        .contains(&(self.rotation * P2::from(p - self.origin)))
     }
 }
 
@@ -279,10 +263,10 @@ impl Distance for Rect {
 impl Distribution<Rect> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Rect {
         let x_axis: V2 = rng.gen();
-        let x_axis = Unit::new_normalize(x_axis);
+        let rotation = Rot2::rotation_between(&V2::new(1., 0.), &x_axis);
         Rect {
             origin: rng.gen(),
-            x_axis,
+            rotation,
             width: rng.gen(),
             height: rng.gen(),
         }

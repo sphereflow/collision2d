@@ -382,8 +382,8 @@ impl ReflectOn<Rect> for MCircle {
         // find out if the MCircle starts inside the rect
         // if the MCircle is inside the Rect this variable will shift the linesegments inwards
         // the rect has to be at least big enough to contain the MCircle
-        let x_shift = rect.x_axis.into_inner() * self.radius;
-        let y_shift = rect.get_y_axis() * self.radius;
+        let x_shift = rect.rotation.into_inner().column(0) * self.radius;
+        let y_shift = rect.rotation.into_inner().column(1) * self.radius;
         let mut inside = false;
         // if the Rect is not too small
         if !(rect.height < 2. * self.radius || rect.width < 2. * self.radius) {
@@ -603,11 +603,11 @@ impl Distance for MCircle {
 }
 
 impl Rotate for MCircle {
-    fn get_rotation(&self) -> V2 {
+    fn get_rotation(&self) -> Rot2 {
         self.path.get_rotation()
     }
-    fn set_rotation(&mut self, x_axis: &V2) {
-        self.path.set_rotation(x_axis);
+    fn set_rotation(&mut self, rotation: &Rot2) {
+        self.path.set_rotation(rotation);
     }
 }
 

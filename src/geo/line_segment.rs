@@ -84,7 +84,11 @@ impl HasDirection for LineSegment {
     }
 
     fn set_direction(&mut self, direction: U2) {
+        let o = self.get_origin();
         self.normal = Unit::new_unchecked(V2::new(-direction.y, direction.x));
+        let rotation = Rot2::rotation_between(&self.direction, &direction);
+        self.a = o + rotation * (self.a - o);
+        self.b = o + rotation * (self.b - o);
         self.direction = direction;
     }
 }
@@ -96,22 +100,6 @@ impl HasNormal for LineSegment {
     fn set_normal(&mut self, normal: Normal) {
         self.normal = normal;
         self.direction = Unit::new_unchecked(V2::new(normal.y, -normal.x));
-    }
-}
-
-impl Rotate for LineSegment {
-    // self.normal is the x axis ; self.direction is the y_axis
-    fn set_rotation(&mut self, x_axis: &V2) {
-        self.normal = Unit::new_normalize(*x_axis);
-        self.direction = Unit::new_unchecked(V2::new(-self.normal.y, self.normal.x));
-        // inverse of the old rotation
-        let disth = distance(&self.a, &self.b) * 0.5;
-        let origin = self.get_origin();
-        self.a = origin - self.direction.into_inner() * disth;
-        self.b = origin + self.direction.into_inner() * disth;
-    }
-    fn get_rotation(&self) -> V2 {
-        self.normal.into_inner()
     }
 }
 
@@ -268,7 +256,6 @@ impl Distribution<LineSegment> for Standard {
     }
 }
 
-use super::circle::Circle;
 impl ReflectOn<Circle> for LineSegment {
     fn reflect_on_normal(&self, circle: &Circle) -> Option<(LineSegment, V2)> {
         match circle.intersect(self) {
