@@ -173,6 +173,15 @@ impl ReflectOn<AABB> for Ray {
     }
 }
 
+impl ReflectOn<ConvexPolygon> for Ray {
+    fn reflect_on_normal_intersect(&self, cpoly: &ConvexPolygon) -> Option<(Self, V2, P2)> {
+        self.intersect(cpoly).map(|oot| {
+            let (i, normal) = oot.get_first();
+            (self.reflect(&i, &normal), normal.into_inner(), i)
+        })
+    }
+}
+
 impl ReflectOn<Logic> for Ray {
     fn reflect_on_normal_intersect(&self, l: &Logic) -> Option<(Self, V2, P2)> {
         self.intersect(l).map(|v| {
@@ -327,6 +336,13 @@ impl Intersect<AABB> for Ray {
             }
         }
         closest
+    }
+}
+
+impl Intersect<ConvexPolygon> for Ray {
+    type Intersection = OneOrTwo<(P2, Normal)>;
+    fn intersect(&self, cpoly: &ConvexPolygon) -> Option<Self::Intersection> {
+        cpoly.intersect(self)
     }
 }
 

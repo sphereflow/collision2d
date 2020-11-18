@@ -14,6 +14,7 @@ extern crate nalgebra as na;
 pub use crate::utils::*;
 pub use aabb::*;
 pub use circle::*;
+pub use convex_polygon::*;
 pub use line::*;
 pub use line_segment::*;
 pub use logic::*;
