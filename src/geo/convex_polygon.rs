@@ -330,9 +330,24 @@ impl Intersect<Circle> for ConvexPolygon {
         let mut res: Option<Self::Intersection> = None;
         for ls in self.get_line_segments() {
             if let Some(i) = circle.intersect(&ls) {
-               if let Some(v) = res.as_mut() {
-                 v.extend(i.into_iter());
-               }
+                if let Some(v) = res.as_mut() {
+                    v.extend(i.into_iter());
+                }
+            }
+        }
+        res
+    }
+}
+
+impl Intersect<Rect> for ConvexPolygon {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, rect: &Rect) -> Option<Self::Intersection> {
+        let mut res: Option<Self::Intersection> = None;
+        for ls in self.get_line_segments() {
+            if let Some(i) = rect.intersect(&ls) {
+                if let Some(v) = res.as_mut() {
+                    v.extend(i.into_iter());
+                }
             }
         }
         res
