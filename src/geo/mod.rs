@@ -1,12 +1,12 @@
 pub mod aabb;
 pub mod circle;
+pub mod convex_polygon;
 pub mod line;
 pub mod line_segment;
 pub mod logic;
 pub mod mcircle;
 pub mod ray;
 pub mod rect;
-pub mod convex_polygon;
 pub mod traits;
 
 extern crate nalgebra as na;
@@ -128,7 +128,7 @@ impl Geo {
             b,
             origin,
             op: LogicOp::AndNot,
-            x_axis: V2::new(1., 0.),
+            rotation: Rot2::identity(),
         })
     }
 }
@@ -242,15 +242,15 @@ impl Rotate for Geo {
             Geo::GeoLogic(geo) => geo.get_rotation(),
         }
     }
-    fn set_rotation(&mut self, x_axis: &Rot2) {
+    fn set_rotation(&mut self, rotation: &Rot2) {
         match self {
-            Geo::GeoRect(geo) => geo.set_rotation(x_axis),
-            Geo::GeoCircle(geo) => geo.set_rotation(x_axis),
-            Geo::GeoRay(geo) => geo.set_rotation(x_axis),
-            Geo::GeoLineSegment(geo) => geo.set_rotation(x_axis),
-            Geo::GeoPoint(geo) => geo.set_rotation(x_axis),
-            Geo::GeoMCircle(geo) => geo.set_rotation(x_axis),
-            Geo::GeoLogic(geo) => geo.set_rotation(x_axis),
+            Geo::GeoRect(geo) => geo.set_rotation(rotation),
+            Geo::GeoCircle(geo) => geo.set_rotation(rotation),
+            Geo::GeoRay(geo) => geo.set_rotation(rotation),
+            Geo::GeoLineSegment(geo) => geo.set_rotation(rotation),
+            Geo::GeoPoint(geo) => geo.set_rotation(rotation),
+            Geo::GeoMCircle(geo) => geo.set_rotation(rotation),
+            Geo::GeoLogic(geo) => geo.set_rotation(rotation),
         }
     }
 }
@@ -282,7 +282,7 @@ impl BitAnd for Geo {
             b,
             origin,
             op: LogicOp::And,
-            x_axis: V2::new(1., 0.),
+            rotation: Rot2::identity(),
         })
     }
 }
@@ -301,7 +301,7 @@ impl BitOr for Geo {
             b,
             origin,
             op: LogicOp::Or,
-            x_axis: V2::new(1., 0.),
+            rotation: Rot2::identity(),
         })
     }
 }

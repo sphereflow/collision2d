@@ -294,17 +294,18 @@ impl Intersect<MCircle> for Ray {
 impl Intersect<Rect> for Ray {
     type Intersection = OneOrTwo<(P2, Normal)>;
     fn intersect(&self, rect: &Rect) -> Option<Self::Intersection> {
-        let mut closest: Option<Self::Intersection> = None;
+        let mut intersect: Option<Self::Intersection> = None;
         for ls in rect.line_segments().iter() {
             if let Some((v, n)) = self.intersect(ls) {
-                if let Some(oot) = closest.as_mut() {
+                if let Some(oot) = intersect.as_mut() {
                     oot.add((v, n));
+                    break;
                 } else {
-                    closest = Some(OneOrTwo::new((v, n)));
+                    intersect = Some(OneOrTwo::new((v, n)));
                 }
             }
         }
-        closest
+        intersect
     }
 }
 

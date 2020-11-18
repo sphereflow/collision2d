@@ -34,9 +34,8 @@ impl Rect {
     }
 
     pub fn points(&self) -> RectPoints {
-        let x_axis = self.get_x_axis();
-        let y_offset = V2::new(-x_axis.y, x_axis.x) * self.height * 0.5;
-        let x_offset = x_axis * self.width * 0.5;
+        let x_offset = self.rotation * V2::new(self.width * 0.5, 0.);
+        let y_offset = self.rotation * V2::new(0., self.height * 0.5);
         let top_right = x_offset + y_offset;
         let bottom_right = x_offset - y_offset;
         [
@@ -226,7 +225,7 @@ impl Contains for Rect {
             width: self.width,
             height: self.height,
         }
-        .contains(&(self.rotation * P2::from(p - self.origin)))
+        .contains(&(self.rotation.inverse() * P2::from(p - self.origin)))
     }
 }
 

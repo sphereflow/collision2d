@@ -6,7 +6,7 @@ pub struct Logic {
     pub a: Box<Geo>,
     pub b: Box<Geo>,
     pub origin: P2,
-    pub x_axis: V2,
+    pub rotation: Rot2,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -17,25 +17,23 @@ pub enum LogicOp {
 }
 
 impl Logic {
-    pub fn new(op: LogicOp, a: Geo, b: Geo, origin: P2, x_axis: V2) -> Self {
+    pub fn new(op: LogicOp, a: Geo, b: Geo, origin: P2, rotation: Rot2) -> Self {
         Logic {
             op,
             a: Box::new(a),
             b: Box::new(b),
             origin,
-            x_axis,
+            rotation,
         }
     }
     pub fn get_a(&self) -> Geo {
         let mut ret = (*self.a).clone();
-        let transform = Matrix2::new(self.x_axis.x, -self.x_axis.y, self.x_axis.y, self.x_axis.x);
-        ret.set_origin(self.origin + transform * self.a.get_origin().coords);
+        ret.set_origin(self.origin + self.rotation * self.a.get_origin().coords);
         ret
     }
     pub fn get_b(&self) -> Geo {
         let mut ret = (*self.b).clone();
-        let transform = Matrix2::new(self.x_axis.x, -self.x_axis.y, self.x_axis.y, self.x_axis.x);
-        ret.set_origin(self.origin + transform * self.b.get_origin().coords);
+        ret.set_origin(self.origin + self.rotation * self.b.get_origin().coords);
         ret
     }
 }
@@ -51,20 +49,14 @@ impl HasOrigin for Logic {
 
 impl Rotate for Logic {
     fn get_rotation(&self) -> Rot2 {
-        let ab = self.b.get_origin() - self.a.get_origin();
-        // xx yx -> xx -xy
-        // xy yy    xy xx
-        Rot2::from_matrix(&Matrix2::new(-ab.y, -ab.x, ab.x, -ab.y))
+        self.rotation
     }
     fn set_rotation(&mut self, rotation: &Rot2) {
-        let rotation = Rot2::rotation_between(&self.get_x_axis(), &rotation.matrix().column(0));
-        self.a
-            .set_origin(rotation.transform_point(&self.a.get_origin()));
-        self.a.rotate(&rotation);
+        let rot_diff = Rot2::rotation_between(&self.get_x_axis(), &rotation.matrix().column(0));
+        self.rotation = *rotation;
 
-        self.b
-            .set_origin(rotation.transform_point(&self.b.get_origin()));
-        self.b.rotate(&rotation);
+        self.a.rotate(&rot_diff);
+        self.b.rotate(&rot_diff);
     }
 }
 
