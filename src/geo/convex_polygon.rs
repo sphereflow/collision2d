@@ -332,6 +332,8 @@ impl Intersect<Circle> for ConvexPolygon {
             if let Some(i) = circle.intersect(&ls) {
                 if let Some(v) = res.as_mut() {
                     v.extend(i.into_iter());
+                } else {
+                    res = Some(i.into_iter().collect());
                 }
             }
         }
@@ -347,6 +349,35 @@ impl Intersect<Rect> for ConvexPolygon {
             if let Some(i) = rect.intersect(&ls) {
                 if let Some(v) = res.as_mut() {
                     v.extend(i.into_iter());
+                } else {
+                    res = Some(i.into_iter().collect());
+                }
+            }
+        }
+        res
+    }
+}
+
+impl Intersect<MCircle> for ConvexPolygon {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, mcircle: &MCircle) -> Option<Self::Intersection> {
+        let circle = mcircle.circle_b();
+        self.intersect(&circle)
+    }
+}
+
+impl Intersect<ConvexPolygon> for ConvexPolygon {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, other: &ConvexPolygon) -> Option<Self::Intersection> {
+        let mut res: Option<Self::Intersection> = None;
+        for lsa in self.get_line_segments() {
+            for lsb in other.get_line_segments() {
+                if let Some(i) = lsa.intersect(&lsb) {
+                    if let Some(v) = res.as_mut() {
+                        v.push(i);
+                    } else {
+                        res = Some(vec![i]);
+                    }
                 }
             }
         }
