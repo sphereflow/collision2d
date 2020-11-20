@@ -384,3 +384,45 @@ impl Intersect<ConvexPolygon> for ConvexPolygon {
         res
     }
 }
+
+impl Intersect<Logic> for ConvexPolygon {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, logic: &Logic) -> Option<Self::Intersection> {
+        let a = logic.get_a();
+        let b = logic.get_b();
+        let isa = self.intersect(&a);
+        let isb = self.intersect(&b);
+        match logic.op {
+            LogicOp::And => {
+                let isa: Option<Vec<P2>> =
+                    isa.map(|v| v.into_iter().filter(|p| b.contains(p)).collect());
+                let isb: Option<Vec<P2>> =
+                    isb.map(|v| v.into_iter().filter(|p| a.contains(p)).collect());
+                extend_opt_vec(isa, isb)
+            }
+            LogicOp::Or => extend_opt_vec(isa, isb),
+            LogicOp::AndNot => {
+                let isa = isa.map(|va| va.into_iter().filter(|p| !b.contains(p)).collect());
+                let isb = isb.map(|vb| vb.into_iter().filter(|p| a.contains(p)).collect());
+                extend_opt_vec(isa, isb)
+            }
+        }
+    }
+}
+
+impl Intersect<Geo> for ConvexPolygon {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, geo: &Geo) -> Option<Self::Intersection> {
+        match geo {
+            Geo::GeoPoint(_p) => None,
+            Geo::GeoRay(ray) => self
+                .intersect(ray)
+                .map(|oot| oot.map(|(p, _)| p).into_vec()),
+            Geo::GeoLineSegment(ls) => self.intersect(ls).map(|oot| oot.map(|(p, _)| p).into_vec()),
+            Geo::GeoRect(rect) => self.intersect(rect),
+            Geo::GeoCircle(circle) => self.intersect(circle),
+            Geo::GeoMCircle(mcircle) => self.intersect(mcircle),
+            Geo::GeoLogic(logic) => self.intersect(logic),
+        }
+    }
+}
