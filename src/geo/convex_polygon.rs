@@ -370,9 +370,10 @@ impl Intersect<ConvexPolygon> for ConvexPolygon {
     type Intersection = Vec<P2>;
     fn intersect(&self, other: &ConvexPolygon) -> Option<Self::Intersection> {
         let mut res: Option<Self::Intersection> = None;
+        let other_segments: Vec<LineSegment> = other.get_line_segments();
         for lsa in self.get_line_segments() {
-            for lsb in other.get_line_segments() {
-                if let Some(i) = lsa.intersect(&lsb) {
+            for lsb in &other_segments {
+                if let Some(i) = lsa.intersect(lsb) {
                     if let Some(v) = res.as_mut() {
                         v.push(i);
                     } else {
