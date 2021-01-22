@@ -289,3 +289,26 @@ pub fn separation_axis_projection(origin: &P2, direction: &U2, p: &P2) -> Float 
 pub fn local_to_global(origin: &P2, rotation: &Rotation2<Float>, p: &V2) -> P2 {
     origin + rotation * p
 }
+
+pub fn cubic_roots(a: Float, b: Float, c: Float, d: Float) -> Vec<Float> {
+    let mut res = Vec::new();
+    let bsq = b * b;
+    let delta0 = bsq - 3. * a * c;
+    let delta1 = 2. * bsq * b - 9. * a * b * c + 27. * a * a * d;
+    let bc_sqrt = (delta1 * delta1 - 4. * delta0 * delta0 * delta0).sqrt();
+    let mut big_c = ((delta1 + bc_sqrt) * 0.5).cbrt();
+    if big_c == 0. {
+        big_c = ((delta1 - bc_sqrt) * 0.5).cbrt();
+    }
+    let xi: Float = ((-3. as Float).sqrt() - 1.) * 0.5;
+    for k in 0..=2 {
+        let xi_k = match k {
+          0 => 1.,
+          1 => xi,
+          2 => xi * xi,
+          _ => panic!("Error in fn cubic_roots: unexpected value of k")
+        };
+        res.push((-1. / (3. * a)) * (b + big_c * xi_k + delta0 / (big_c * xi_k)));
+    }
+    res
+}
