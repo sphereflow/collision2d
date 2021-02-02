@@ -120,6 +120,23 @@ pub fn smallest_positive_sort(a: Float, b: Float) -> Option<(Float, Float)> {
     }
 }
 
+pub fn get_smallest_positive_by<F, T>(v: &mut Vec<T>, f: F) -> Option<T>
+where
+    F: Fn(&T) -> f64,
+    T: Copy,
+{
+    v.sort_unstable_by(|a, b| {
+        f(a).partial_cmp(&f(b))
+            .expect("get_smallest_positive: sort_unstable_by failed")
+    });
+    for num in v {
+        if f(&num) >= 0. {
+            return Some(*num);
+        }
+    }
+    None
+}
+
 pub fn first<A, B>((a, _): (A, B)) -> A {
     a
 }
@@ -290,25 +307,61 @@ pub fn local_to_global(origin: &P2, rotation: &Rotation2<Float>, p: &V2) -> P2 {
     origin + rotation * p
 }
 
-pub fn cubic_roots(a: Float, b: Float, c: Float, d: Float) -> Vec<Float> {
-    let mut res = Vec::new();
-    let bsq = b * b;
-    let delta0 = bsq - 3. * a * c;
-    let delta1 = 2. * bsq * b - 9. * a * b * c + 27. * a * a * d;
-    let bc_sqrt = (delta1 * delta1 - 4. * delta0 * delta0 * delta0).sqrt();
-    let mut big_c = ((delta1 + bc_sqrt) * 0.5).cbrt();
-    if big_c == 0. {
-        big_c = ((delta1 - bc_sqrt) * 0.5).cbrt();
+pub fn quadratic_roots(a: Float, b: Float) -> Vec<Float> {
+    let mah = -1. * a * 0.5;
+    let discriminant = mah * mah - b;
+    match discriminant {
+        _ if discriminant.abs() == 0. => vec![mah],
+        _ if discriminant > 0. => {
+            let root = discriminant.sqrt();
+            vec![mah - root, mah + root]
+        }
+        _ => vec![],
     }
-    let xi: Float = ((-3. as Float).sqrt() - 1.) * 0.5;
-    for k in 0..=2 {
-        let xi_k = match k {
-          0 => 1.,
-          1 => xi,
-          2 => xi * xi,
-          _ => panic!("Error in fn cubic_roots: unexpected value of k")
-        };
-        res.push((-1. / (3. * a)) * (b + big_c * xi_k + delta0 / (big_c * xi_k)));
+}
+
+pub fn cubic_roots(steps: u8, a: Float, b: Float, c: Float) -> Vec<Float> {
+    let big_q = (a * a - 3. * b) / 9.;
+    let big_r = (2. * a.powi(3) - 9. * a * b + 27. * c) / 54.;
+    let theta;
+    let x3;
+    if big_r * big_r < big_q.powi(3) {
+        theta = (big_r / big_q.powf(1.5)).acos();
+        x3 = -2. * big_q.sqrt() * (theta / 3.).cos() - a / 3.;
+    } else {
+        let big_a = -big_r.signum() * (big_r.abs() + (big_r.powi(2) - big_q.powi(3)).sqrt()).cbrt();
+        let big_b = if big_a != 0. { big_q / big_a } else { 0. };
+        x3 = big_a + big_b - a / 3.;
     }
+    let (mut u1, mut u2);
+    let mut gamma = -x3;
+    let mut alpha = a - gamma;
+    let mut beta = b - gamma * alpha;
+    let (mut delta1, mut delta2, mut delta3);
+    let (mut q1, mut q2, mut q3);
+    let (mut e1, mut e2, mut e3) = (0., 0., c - gamma * beta);
+    for _ in 0..steps {
+        u1 = alpha - gamma;
+        u2 = beta - gamma * u1;
+        q1 = e1;
+        q2 = e2 - gamma * q1;
+        q3 = e3 - gamma * q2;
+        if u2 == 0. {
+            delta3 = 0.;
+        } else {
+            delta3 = q3 / u2;
+        }
+        delta2 = q2 - u1 * delta3;
+        delta1 = q1 - delta3;
+        alpha += delta1;
+        beta += delta2;
+        gamma += delta3;
+        e1 = a - gamma - alpha;
+        e2 = b - alpha * gamma - beta;
+        e3 = c - gamma * beta;
+    }
+    // solve the quadratic equation
+    let mut res = quadratic_roots(alpha, beta);
+    res.push(x3);
     res
 }

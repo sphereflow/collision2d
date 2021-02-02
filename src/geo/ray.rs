@@ -96,8 +96,14 @@ impl Ray {
         Ray: ReflectOn<T>,
     {
         // get the intersection point
-        if let Some((_reflected, normal, intersection)) = self.reflect_on_normal_intersect(surface) {
-            Some(self.refract(&intersection, &Unit::new_unchecked(normal), incoming_refractive_index, outgoing_refractive_index))
+        if let Some((_reflected, normal, intersection)) = self.reflect_on_normal_intersect(surface)
+        {
+            Some(self.refract(
+                &intersection,
+                &Unit::new_unchecked(normal),
+                incoming_refractive_index,
+                outgoing_refractive_index,
+            ))
         } else {
             None
         }
@@ -357,6 +363,13 @@ impl Intersect<ConvexPolygon> for Ray {
     type Intersection = OneOrTwo<(P2, Normal)>;
     fn intersect(&self, cpoly: &ConvexPolygon) -> Option<Self::Intersection> {
         cpoly.intersect(self)
+    }
+}
+
+impl Intersect<CubicBezier> for Ray {
+    type Intersection = (P2, Normal);
+    fn intersect(&self, cbez: &CubicBezier) -> Option<Self::Intersection> {
+        cbez.intersect(self)
     }
 }
 

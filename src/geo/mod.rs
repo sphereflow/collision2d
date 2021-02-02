@@ -1,6 +1,7 @@
 pub mod aabb;
 pub mod circle;
 pub mod convex_polygon;
+pub mod cubic_bezier;
 pub mod line;
 pub mod line_segment;
 pub mod logic;
@@ -15,6 +16,7 @@ pub use crate::utils::*;
 pub use aabb::*;
 pub use circle::*;
 pub use convex_polygon::*;
+pub use cubic_bezier::*;
 pub use line::*;
 pub use line_segment::*;
 pub use logic::*;
