@@ -65,7 +65,7 @@ impl Intersect<Ray> for CubicBezier {
         get_smallest_positive_by(&mut rs, |(r, _t)| *r).map(|(r, t)| {
             let p = ray.eval_at_r(r);
             let slope = 3. * a.x * t.powi(2) + 2. * b.x * t + c.x;
-            let normal = Unit::new_normalize(V2::new(-slope, (1. - slope.powi(2)).sqrt()));
+            let normal = Unit::new_normalize(V2::new(-slope, 1.));
             (p, rot * normal)
         })
     }
