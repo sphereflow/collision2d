@@ -65,9 +65,9 @@ impl Intersect<LineSegment> for Circle {
         let line: Line = ls.into();
         if let Some((r, s)) = self.intersect(&line) {
             if between(r, 0.0, 1.0) {
-                let mut res = OneOrTwo::new(line.eval_at(r));
+                let mut res = OneOrTwo::new(line.eval_at_r(r));
                 if between(s, 0.0, 1.0) {
-                    res.add(line.eval_at(s));
+                    res.add(line.eval_at_r(s));
                     if s < r {
                         res.swap();
                     }
@@ -75,7 +75,7 @@ impl Intersect<LineSegment> for Circle {
                 return Some(res);
             } else {
                 if between(s, 0.0, 1.0) {
-                    return Some(OneOrTwo::new(line.eval_at(s)));
+                    return Some(OneOrTwo::new(line.eval_at_r(s)));
                 }
             }
         }

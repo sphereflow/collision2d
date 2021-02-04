@@ -28,7 +28,7 @@ impl Line {
         }
     }
 
-    pub fn eval_at(&self, r: Float) -> P2 {
+    pub fn eval_at_r(&self, r: Float) -> P2 {
         self.origin + r * self.direction.into_inner()
     }
 }

@@ -386,6 +386,23 @@ impl Intersect<ConvexPolygon> for ConvexPolygon {
     }
 }
 
+impl Intersect<CubicBezier> for ConvexPolygon {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, cb: &CubicBezier) -> Option<Self::Intersection> {
+        let mut res: Option<Self::Intersection> = None;
+        for ls in self.get_line_segments() {
+            if let Some(i) = cb.intersect(&ls) {
+                if let Some(v) = res.as_mut() {
+                    v.extend(i.into_iter().map(|(p, _n)| p));
+                } else {
+                    res = Some(i.into_iter().map(|(p, _n)| p).collect());
+                }
+            }
+        }
+        res
+    }
+}
+
 impl Intersect<Logic> for ConvexPolygon {
     type Intersection = Vec<P2>;
     fn intersect(&self, logic: &Logic) -> Option<Self::Intersection> {
@@ -423,6 +440,7 @@ impl Intersect<Geo> for ConvexPolygon {
             Geo::GeoRect(rect) => self.intersect(rect),
             Geo::GeoCircle(circle) => self.intersect(circle),
             Geo::GeoMCircle(mcircle) => self.intersect(mcircle),
+            Geo::GeoCubicBezier(cb) => self.intersect(cb),
             Geo::GeoLogic(logic) => self.intersect(logic),
         }
     }
