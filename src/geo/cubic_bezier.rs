@@ -23,7 +23,7 @@ impl HasOrigin for CubicBezier {
         (self.points[1] + self.points[2].coords) * 0.5
     }
     fn set_origin(&mut self, origin: P2) {
-        let diff: V2 = (self.get_origin() - origin.coords).coords;
+        let diff: V2 = (origin - self.get_origin().coords).coords;
         for p in self.points.iter_mut() {
             *p += diff;
         }
