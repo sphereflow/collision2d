@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct CubicBezier {
     points: [P2; 4],
 }
@@ -39,6 +40,22 @@ impl HasDirection for CubicBezier {
         for i in 1..4 {
             self.points[i] = o + rotation * (self.points[i] - o);
         }
+    }
+}
+
+impl Scale for CubicBezier {
+    fn scale(&mut self, scale_x: Float, scale_y: Float) {
+        let o = self.get_origin();
+        for p in self.points.iter_mut() {
+            p.scale(scale_x, scale_y);
+        }
+        self.set_origin(o);
+    }
+
+    fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
+        let mut o = self.get_origin();
+        o.scale(scale_x, scale_y);
+        self.set_origin(o);
     }
 }
 
