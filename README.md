@@ -13,6 +13,7 @@ Various functionality for basic 2D objects including:
 - AABB: Axis Aligned bounding box  
         A lot of the functionality for bounding boxes, which you usually find, has not been implemented  
         or derived by converting into Rect first
+- CubicBezier
 - Geo: An enum for Geometric objects
 - Logic: Allows the basic objects to be composed into more complex ones
 
@@ -20,7 +21,7 @@ Various functionality for basic 2D objects including:
 
 - HasGeo: Conversion into Geo
 - HasOrigin: Position
-- Rotate: Rotation based on an x_axis
+- Rotate: Rotation based on nalgebras rotation matrix
 - GeoT: An experiment to replace the Geo enum
 - Intersect: Intersection between objects with an associated Intersection type
 - ReflectOn: Reflection of objects based on the point of intersection and its normal
