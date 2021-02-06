@@ -2,7 +2,7 @@ use super::*;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct CubicBezier {
-    points: [P2; 4],
+    pub points: [P2; 4],
 }
 
 impl CubicBezier {
@@ -15,6 +15,36 @@ impl CubicBezier {
                 P2::new(1., 1.),
             ],
         }
+    }
+
+    pub fn new_sample2() -> Self {
+        CubicBezier {
+            points: [
+                P2::new(0., 0.5),
+                P2::new(0.7, 0.),
+                P2::new(0.3, 1.),
+                P2::new(1., 0.3),
+            ],
+        }
+    }
+
+    pub fn normal_at_t(&self, t: Float) -> Normal {
+        let t2 = t.powi(2);
+        let tt2 = t - t2;
+        let ot2 = (1. - t).powi(2);
+        let p012: P2 =
+            t2 * self.points[2] + 2. * tt2 * self.points[1].coords + ot2 * self.points[0].coords;
+        let p123: P2 =
+            t2 * self.points[3] + 2. * tt2 * self.points[2].coords + ot2 * self.points[1].coords;
+        let tangent = p123 - p012;
+        U2::new_normalize(V2::new(-tangent.y, tangent.x))
+    }
+
+    pub fn eval_at_t(&self, t: Float) -> P2 {
+        (1. - t).powi(3) * self.points[0]
+            + (1. - t).powi(2) * t * self.points[1].coords
+            + (1. - t) * t.powi(2) * self.points[2].coords
+            + t.powi(3) * self.points[3].coords
     }
 }
 
@@ -37,7 +67,7 @@ impl HasDirection for CubicBezier {
     fn set_direction(&mut self, direction: U2) {
         let o = self.get_origin();
         let rotation = Rot2::rotation_between(&self.get_direction(), &direction);
-        for i in 1..4 {
+        for i in 0..4 {
             self.points[i] = o + rotation * (self.points[i] - o);
         }
     }
@@ -71,8 +101,8 @@ impl Intersect<Ray> for CubicBezier {
             .collect();
         // intersect: get closest positive t
         let a = 3. * (p[1] - p[2]) - p[0].coords + p[3].coords;
-        let b = p[0] - 2. * p[1] + p[2].coords;
-        let c = p[1] - p[0];
+        let b = 3. * (p[0] - 2. * p[1] + p[2].coords);
+        let c = 3. * (p[1] - p[0]);
         let d = p[0];
         let mut rs: Vec<(Float, Float)> = cubic_roots(0, b.y / a.y, c.y / a.y, d.y / a.y)
             .iter()
@@ -80,10 +110,7 @@ impl Intersect<Ray> for CubicBezier {
             .filter(|(r, t)| *t >= 0. && *t <= 1. && *r >= 0.)
             .collect();
         get_smallest_positive_by(&mut rs, |(r, _t)| *r).map(|(r, t)| {
-            let p = ray.eval_at_r(r);
-            let slope = 3. * a.x * t.powi(2) + 2. * b.x * t + c.x;
-            let normal = Unit::new_normalize(V2::new(-slope, 1.));
-            (p, rot * normal)
+            (ray.eval_at_r(r), self.normal_at_t(t))
         })
     }
 }
@@ -100,18 +127,15 @@ impl Intersect<LineSegment> for CubicBezier {
             .collect();
         // intersect: get closest positive t
         let a = 3. * (p[1] - p[2]) - p[0].coords + p[3].coords;
-        let b = p[0] - 2. * p[1] + p[2].coords;
-        let c = p[1] - p[0];
+        let b = 3. * (p[0] - 2. * p[1] + p[2].coords);
+        let c = 3. * (p[1] - p[0]);
         let d = p[0];
         let intersections: Vec<_> = cubic_roots(0, b.y / a.y, c.y / a.y, d.y / a.y)
             .iter()
             .map(|t| (t.powi(3) * a.x + t.powi(2) * b.x + t * c.x + d.x, *t))
             .filter(|(r, t)| *t >= 0. && *t <= 1. && *r >= 0. && *r <= 1.)
             .map(|(r, t)| {
-                let p = ls.eval_at_r(r);
-                let slope = 3. * a.x * t.powi(2) + 2. * b.x * t + c.x;
-                let normal = Unit::new_normalize(V2::new(-slope, 1.));
-                (p, rot * normal)
+                (ls.eval_at_r(r), self.normal_at_t(t))
             })
             .collect();
         if intersections.is_empty() {
@@ -133,8 +157,8 @@ impl Intersect<Line> for CubicBezier {
             .collect();
         // intersect: get closest positive t
         let a = 3. * (p[1] - p[2]) - p[0].coords + p[3].coords;
-        let b = p[0] - 2. * p[1] + p[2].coords;
-        let c = p[1] - p[0];
+        let b = 3. * (p[0] - 2. * p[1] + p[2].coords);
+        let c = 3. * (p[1] - p[0]);
         let d = p[0];
         let mut rs: Vec<(Float, Float)> = cubic_roots(0, b.y / a.y, c.y / a.y, d.y / a.y)
             .iter()
@@ -142,10 +166,7 @@ impl Intersect<Line> for CubicBezier {
             .filter(|(_r, t)| *t >= 0. && *t <= 1.)
             .collect();
         get_smallest_positive_by(&mut rs, |(r, _t)| *r).map(|(r, t)| {
-            let p = line.eval_at_r(r);
-            let slope = 3. * a.x * t.powi(2) + 2. * b.x * t + c.x;
-            let normal = Unit::new_normalize(V2::new(-slope, 1.));
-            (p, rot * normal)
+            (line.eval_at_r(r), self.normal_at_t(t))
         })
     }
 }
