@@ -33,6 +33,7 @@ impl Rect {
         }
     }
 
+    /// returns [top right, bottom right, bottom left, top left]
     pub fn points(&self) -> RectPoints {
         let x_offset = self.rotation * V2::new(self.width * 0.5, 0.);
         let y_offset = self.rotation * V2::new(0., self.height * 0.5);
@@ -46,6 +47,7 @@ impl Rect {
         ]
     }
 
+    /// returns [right, bottom, left, top]
     pub fn line_segments(&self) -> RectLineSegments {
         let [a, b, c, d] = self.points();
         [
