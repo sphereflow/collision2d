@@ -1,7 +1,8 @@
 use super::*;
 
 pub struct ConvexPolygon {
-    /// X_axis for rotation
+    origin: P2,
+    /// Rotation matrix
     rotation: Rot2,
     /// Bounding box
     aabb: AABB,
@@ -15,28 +16,25 @@ impl ConvexPolygon {
     pub fn new_convex_hull(points: &Vec<P2>) -> Self {
         let mut all_points: Vec<V2> = points.iter().map(|p| p.coords).collect();
 
-        // calculate the bounding box
-        let mut min_x = Float::MIN;
-        let mut min_y = Float::MIN;
-        let mut max_x = Float::MAX;
-        let mut max_y = Float::MAX;
+        // calculate the bounding box and the origin
+        let mut min_x = Float::MAX;
+        let mut min_y = Float::MAX;
+        let mut max_x = Float::MIN;
+        let mut max_y = Float::MIN;
+        let mut origin = P2::new(0., 0.);
         for p in all_points.iter() {
-            match (p.x < min_x, p.x > max_x) {
-                (true, _) => min_x = p.x,
-                (_, true) => max_x = p.x,
-                _ => {}
-            }
-            match (p.y < min_y, p.y > max_y) {
-                (true, _) => min_y = p.y,
-                (_, true) => max_y = p.y,
-                _ => {}
-            }
+            min_x = min_x.min(p.x);
+            max_x = max_x.max(p.x);
+            min_y = min_y.min(p.y);
+            max_y = max_y.max(p.y);
+            origin += p;
         }
         let aabb = AABB::from_tlbr(max_y, min_x, min_y, max_x);
+        origin.x /= all_points.len() as Float;
+        origin.y /= all_points.len() as Float;
 
         for point in all_points.iter_mut() {
-            point.x -= aabb.origin.x;
-            point.y -= aabb.origin.y;
+            *point -= origin.coords;
         }
 
         // split all_points into left (x-component < 0) and right (x-component >= 0)
@@ -101,6 +99,7 @@ impl ConvexPolygon {
         }
 
         ConvexPolygon {
+            origin,
             rotation: Rot2::identity(),
             aabb,
             points: hull_points,
@@ -156,6 +155,21 @@ impl ConvexPolygon {
         self.points = hull_points;
     }
 
+    pub fn calc_aabb(points: &Vec<P2>) -> AABB {
+        // calculate the bounding box
+        let mut min_x = Float::MAX;
+        let mut min_y = Float::MAX;
+        let mut max_x = Float::MIN;
+        let mut max_y = Float::MIN;
+        for p in points {
+            min_x = min_x.min(p.x);
+            max_x = max_x.max(p.x);
+            min_y = min_y.min(p.y);
+            max_y = max_y.max(p.y);
+        }
+        AABB::from_tlbr(max_y, min_x, min_y, max_x)
+    }
+
     pub fn get_line_segments(&self) -> Vec<LineSegment> {
         let mut res = Vec::with_capacity(self.points.len());
         for w in self.points.windows(2) {
@@ -178,10 +192,10 @@ impl ConvexPolygon {
 
 impl HasOrigin for ConvexPolygon {
     fn get_origin(&self) -> P2 {
-        self.aabb.origin
+        self.origin
     }
     fn set_origin(&mut self, origin: P2) {
-        self.aabb.origin = origin;
+        self.origin = origin;
     }
 }
 
@@ -256,6 +270,42 @@ impl Scale for ConvexPolygon {
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {
         self.aabb.origin.x *= scale_x;
         self.aabb.origin.y *= scale_y;
+    }
+}
+
+impl Mirror for ConvexPolygon {
+    fn mirror_x(&self) -> Self {
+        let mut points = Vec::new();
+        // first rotate then mirror
+        let rot = self.get_rotation();
+        for p in self.points.iter() {
+            let rotated = rot * p;
+            points.push(V2::new(-rotated.x, rotated.y));
+        }
+        let global_points: Vec<P2> = points.iter().map(|v| self.origin + *v).collect();
+        ConvexPolygon {
+            origin: self.origin,
+            rotation: Rot2::identity(),
+            points,
+            aabb: ConvexPolygon::calc_aabb(&global_points),
+        }
+    }
+
+    fn mirror_y(&self) -> Self {
+        let mut points = Vec::new();
+        // first rotate then mirror
+        let rot = self.get_rotation();
+        for p in self.points.iter() {
+            let rotated = rot * p;
+            points.push(V2::new(-rotated.x, rotated.y));
+        }
+        let global_points: Vec<P2> = points.iter().map(|v| self.origin + *v).collect();
+        ConvexPolygon {
+            origin: self.origin,
+            rotation: Rot2::identity(),
+            points,
+            aabb: ConvexPolygon::calc_aabb(&global_points),
+        }
     }
 }
 

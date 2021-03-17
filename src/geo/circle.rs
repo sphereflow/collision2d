@@ -158,6 +158,15 @@ impl ClosestPoint for Circle {
     }
 }
 
+impl Mirror for Circle {
+    fn mirror_x(&self) -> Self {
+        *self
+    }
+    fn mirror_y(&self) -> Self {
+        *self
+    }
+}
+
 impl Distance for Circle {
     fn distance(&self, p: &P2) -> Float {
         distance(&self.origin, &p) - self.radius

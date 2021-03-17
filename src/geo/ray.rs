@@ -459,6 +459,23 @@ impl Scale for Ray {
     }
 }
 
+impl Mirror for Ray {
+    fn mirror_x(&self) -> Self {
+        Ray {
+            origin: self.origin,
+            normal: Normal::new_unchecked(V2::new(-self.normal.x, self.normal.y)),
+            direction: U2::new_unchecked(V2::new(-self.direction.x, self.direction.y)),
+        }
+    }
+    fn mirror_y(&self) -> Self {
+        Ray {
+            origin: self.origin,
+            normal: Normal::new_unchecked(V2::new(self.normal.x, -self.normal.y)),
+            direction: U2::new_unchecked(V2::new(self.direction.x, -self.direction.y)),
+        }
+    }
+}
+
 impl ClosestPoint for Ray {
     fn closest_point_to(&self, p: &P2) -> P2 {
         let po = p - self.origin;

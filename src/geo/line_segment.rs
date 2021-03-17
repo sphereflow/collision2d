@@ -117,6 +117,25 @@ impl Scale for LineSegment {
     }
 }
 
+impl Mirror for LineSegment {
+  fn mirror_x(&self) -> Self {
+        LineSegment {
+            a: P2::new(self.b.x, self.a.y),
+            b: P2::new(self.a.x, self.b.y),
+            normal: Normal::new_unchecked(V2::new(-self.normal.x, self.normal.y)),
+            direction: U2::new_unchecked(V2::new(-self.direction.x, self.direction.y)),
+        }
+  }
+  fn mirror_y(&self) -> Self {
+        LineSegment {
+            a: P2::new(self.a.x, self.b.y),
+            b: P2::new(self.b.x, self.a.y),
+            normal: Normal::new_unchecked(V2::new(self.normal.x, -self.normal.y)),
+            direction: U2::new_unchecked(V2::new(self.direction.x, -self.direction.y)),
+        }
+  }
+}
+
 impl ReflectOn<Line> for LineSegment {
     fn reflect_on_normal(&self, line: &Line) -> Option<(LineSegment, V2)> {
         match self.intersect(line) {

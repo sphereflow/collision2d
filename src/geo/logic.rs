@@ -156,6 +156,30 @@ impl Distance for Logic {
     }
 }
 
+impl Mirror for Logic {
+    fn mirror_x(&self) -> Self {
+        let mut res = self.clone();
+        let ao = res.a.get_origin();
+        let bo = res.b.get_origin();
+        res.a.set_origin(P2::new(-ao.x, ao.y));
+        res.b.set_origin(P2::new(-bo.x, bo.y));
+        res.a.mirror_x();
+        res.b.mirror_x();
+        res
+    }
+
+    fn mirror_y(&self) -> Self {
+        let mut res = self.clone();
+        let ao = res.a.get_origin();
+        let bo = res.b.get_origin();
+        res.a.set_origin(P2::new(ao.x, -ao.y));
+        res.b.set_origin(P2::new(bo.x, -bo.y));
+        res.a.mirror_y();
+        res.b.mirror_y();
+        res
+    }
+}
+
 impl Intersect<LineSegment> for Logic {
     type Intersection = Vec<P2>;
     fn intersect(&self, line_segment: &LineSegment) -> Option<Self::Intersection> {

@@ -271,6 +271,34 @@ impl Rotate for Geo {
     }
 }
 
+impl Mirror for Geo {
+    fn mirror_x(&self) -> Self {
+        match self {
+            Geo::GeoRect(geo) => geo.mirror_x().into(),
+            Geo::GeoCircle(geo) => geo.mirror_x().into(),
+            Geo::GeoRay(geo) => geo.mirror_x().into(),
+            Geo::GeoLineSegment(geo) => geo.mirror_x().into(),
+            Geo::GeoPoint(geo) => geo.mirror_x().into(),
+            Geo::GeoMCircle(geo) => geo.mirror_x().into(),
+            Geo::GeoCubicBezier(geo) => geo.mirror_x().into(),
+            Geo::GeoLogic(geo) => geo.mirror_x().into(),
+        }
+    }
+
+    fn mirror_y(&self) -> Self {
+        match self {
+            Geo::GeoRect(geo) => geo.mirror_x().into(),
+            Geo::GeoCircle(geo) => geo.mirror_x().into(),
+            Geo::GeoRay(geo) => geo.mirror_x().into(),
+            Geo::GeoLineSegment(geo) => geo.mirror_x().into(),
+            Geo::GeoPoint(geo) => geo.mirror_x().into(),
+            Geo::GeoMCircle(geo) => geo.mirror_x().into(),
+            Geo::GeoCubicBezier(geo) => geo.mirror_x().into(),
+            Geo::GeoLogic(geo) => geo.mirror_x().into(),
+        }
+    }
+}
+
 impl Distribution<Geo> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Geo {
         match rng.next_u32() % 7 {
@@ -350,6 +378,16 @@ impl From<MCircle> for Geo {
 impl From<LineSegment> for Geo {
     fn from(ls: LineSegment) -> Self {
         Geo::GeoLineSegment(ls)
+    }
+}
+impl From<CubicBezier> for Geo {
+    fn from(cb: CubicBezier) -> Self {
+        Geo::GeoCubicBezier(cb)
+    }
+}
+impl From<Logic> for Geo {
+    fn from(l: Logic) -> Self {
+        Geo::GeoLogic(l)
     }
 }
 

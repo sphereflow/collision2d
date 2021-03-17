@@ -116,6 +116,29 @@ impl Scale for P2 {
     }
 }
 
+pub trait Mirror {
+    fn mirror_x(&self) -> Self;
+    fn mirror_y(&self) -> Self;
+}
+
+impl Mirror for P2 {
+    fn mirror_x(&self) -> Self {
+        P2::new(-self.x, self.y)
+    }
+    fn mirror_y(&self) -> Self {
+        P2::new(self.x, -self.y)
+    }
+}
+
+impl Mirror for V2 {
+    fn mirror_x(&self) -> Self {
+        V2::new(-self.x, self.y)
+    }
+    fn mirror_y(&self) -> Self {
+        V2::new(self.x, -self.y)
+    }
+}
+
 pub trait Intersect<T> {
     type Intersection;
 

@@ -194,6 +194,15 @@ impl Distance for AABB {
     }
 }
 
+impl Mirror for AABB {
+    fn mirror_x(&self) -> Self {
+        *self
+    }
+    fn mirror_y(&self) -> Self {
+        *self
+    }
+}
+
 impl Distribution<AABB> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> AABB {
         AABB {

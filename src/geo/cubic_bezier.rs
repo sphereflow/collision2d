@@ -89,6 +89,30 @@ impl Scale for CubicBezier {
     }
 }
 
+impl Mirror for CubicBezier {
+    fn mirror_x(&self) -> Self {
+        let mut points = self.points;
+        // As in LineSegment we just exchange the x coordinate for points[1] and points[2]
+        points[1].x = self.points[2].x;
+        points[2].x = self.points[1].x;
+        let origin = self.get_origin();
+        points[0].x = 2. * origin.x - points[0].x;
+        points[1].x = 2. * origin.x - points[1].x;
+        CubicBezier { points }
+    }
+
+    fn mirror_y(&self) -> Self {
+        let mut points = self.points;
+        // As in LineSegment we just exchange the y coordinate for points[1] and points[2]
+        points[1].y = self.points[2].y;
+        points[2].y = self.points[1].y;
+        let origin = self.get_origin();
+        points[0].y = 2. * origin.y - points[0].y;
+        points[1].y = 2. * origin.y - points[1].y;
+        CubicBezier { points }
+    }
+}
+
 impl Intersect<Ray> for CubicBezier {
     type Intersection = (P2, Normal);
     fn intersect(&self, ray: &Ray) -> Option<Self::Intersection> {
@@ -109,9 +133,8 @@ impl Intersect<Ray> for CubicBezier {
             .map(|t| (t.powi(3) * a.x + t.powi(2) * b.x + t * c.x + d.x, *t))
             .filter(|(r, t)| *t >= 0. && *t <= 1. && *r >= 0.)
             .collect();
-        get_smallest_positive_by(&mut rs, |(r, _t)| *r).map(|(r, t)| {
-            (ray.eval_at_r(r), self.normal_at_t(t))
-        })
+        get_smallest_positive_by(&mut rs, |(r, _t)| *r)
+            .map(|(r, t)| (ray.eval_at_r(r), self.normal_at_t(t)))
     }
 }
 
@@ -134,9 +157,7 @@ impl Intersect<LineSegment> for CubicBezier {
             .iter()
             .map(|t| (t.powi(3) * a.x + t.powi(2) * b.x + t * c.x + d.x, *t))
             .filter(|(r, t)| *t >= 0. && *t <= 1. && *r >= 0. && *r <= 1.)
-            .map(|(r, t)| {
-                (ls.eval_at_r(r), self.normal_at_t(t))
-            })
+            .map(|(r, t)| (ls.eval_at_r(r), self.normal_at_t(t)))
             .collect();
         if intersections.is_empty() {
             return None;
@@ -165,8 +186,7 @@ impl Intersect<Line> for CubicBezier {
             .map(|t| (t.powi(3) * a.x + t.powi(2) * b.x + t * c.x + d.x, *t))
             .filter(|(_r, t)| *t >= 0. && *t <= 1.)
             .collect();
-        get_smallest_positive_by(&mut rs, |(r, _t)| *r).map(|(r, t)| {
-            (line.eval_at_r(r), self.normal_at_t(t))
-        })
+        get_smallest_positive_by(&mut rs, |(r, _t)| *r)
+            .map(|(r, t)| (line.eval_at_r(r), self.normal_at_t(t)))
     }
 }

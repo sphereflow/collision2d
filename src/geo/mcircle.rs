@@ -624,6 +624,21 @@ impl Scale for MCircle {
     }
 }
 
+impl Mirror for MCircle {
+    fn mirror_x(&self) -> Self {
+        let mut mcircle = *self;
+        mcircle.path.mirror_x();
+        mcircle.speed_vector.x *= -1.;
+        mcircle
+    }
+    fn mirror_y(&self) -> Self {
+        let mut mcircle = *self;
+        mcircle.path.mirror_y();
+        mcircle.speed_vector.y *= -1.;
+        mcircle
+    }
+}
+
 impl Distribution<MCircle> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> MCircle {
         let mut speed_vector: V2 = rng.gen();

@@ -220,6 +220,26 @@ impl Scale for Rect {
     }
 }
 
+impl Mirror for Rect {
+    fn mirror_x(&self) -> Self {
+        Rect {
+            origin: self.origin,
+            rotation: self.rotation.inverse(),
+            width: self.width,
+            height: self.height,
+        }
+    }
+
+    fn mirror_y(&self) -> Self {
+        Rect {
+            origin: self.origin,
+            rotation: self.rotation.inverse(),
+            width: self.width,
+            height: self.height,
+        }
+    }
+}
+
 impl Contains for Rect {
     fn contains(&self, p: &P2) -> bool {
         AABB {
