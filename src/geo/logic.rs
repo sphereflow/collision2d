@@ -159,23 +159,25 @@ impl Distance for Logic {
 impl Mirror for Logic {
     fn mirror_x(&self) -> Self {
         let mut res = self.clone();
-        let ao = res.a.get_origin();
-        let bo = res.b.get_origin();
-        res.a.set_origin(P2::new(-ao.x, ao.y));
-        res.b.set_origin(P2::new(-bo.x, bo.y));
-        res.a.mirror_x();
-        res.b.mirror_x();
+        let rot = self.get_rotation();
+        res.a
+            .set_origin(rot.inverse() * (rot * res.a.get_origin()).mirror_x());
+        res.b
+            .set_origin(rot.inverse() * (rot * res.b.get_origin()).mirror_x());
+        res.a = Box::new(res.a.mirror_x());
+        res.b = Box::new(res.b.mirror_x());
         res
     }
 
     fn mirror_y(&self) -> Self {
         let mut res = self.clone();
-        let ao = res.a.get_origin();
-        let bo = res.b.get_origin();
-        res.a.set_origin(P2::new(ao.x, -ao.y));
-        res.b.set_origin(P2::new(bo.x, -bo.y));
-        res.a.mirror_y();
-        res.b.mirror_y();
+        let rot = self.get_rotation();
+        res.a
+            .set_origin(rot.inverse() * (rot * res.a.get_origin()).mirror_y());
+        res.b
+            .set_origin(rot.inverse() * (rot * res.b.get_origin()).mirror_y());
+        res.a = Box::new(res.a.mirror_y());
+        res.b = Box::new(res.b.mirror_y());
         res
     }
 }

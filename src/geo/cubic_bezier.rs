@@ -97,7 +97,7 @@ impl Mirror for CubicBezier {
         points[2].x = self.points[1].x;
         let origin = self.get_origin();
         points[0].x = 2. * origin.x - points[0].x;
-        points[1].x = 2. * origin.x - points[1].x;
+        points[3].x = 2. * origin.x - points[3].x;
         CubicBezier { points }
     }
 
@@ -108,7 +108,7 @@ impl Mirror for CubicBezier {
         points[2].y = self.points[1].y;
         let origin = self.get_origin();
         points[0].y = 2. * origin.y - points[0].y;
-        points[1].y = 2. * origin.y - points[1].y;
+        points[3].y = 2. * origin.y - points[3].y;
         CubicBezier { points }
     }
 }

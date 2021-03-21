@@ -287,14 +287,14 @@ impl Mirror for Geo {
 
     fn mirror_y(&self) -> Self {
         match self {
-            Geo::GeoRect(geo) => geo.mirror_x().into(),
-            Geo::GeoCircle(geo) => geo.mirror_x().into(),
-            Geo::GeoRay(geo) => geo.mirror_x().into(),
-            Geo::GeoLineSegment(geo) => geo.mirror_x().into(),
-            Geo::GeoPoint(geo) => geo.mirror_x().into(),
-            Geo::GeoMCircle(geo) => geo.mirror_x().into(),
-            Geo::GeoCubicBezier(geo) => geo.mirror_x().into(),
-            Geo::GeoLogic(geo) => geo.mirror_x().into(),
+            Geo::GeoRect(geo) => geo.mirror_y().into(),
+            Geo::GeoCircle(geo) => geo.mirror_y().into(),
+            Geo::GeoRay(geo) => geo.mirror_y().into(),
+            Geo::GeoLineSegment(geo) => geo.mirror_y().into(),
+            Geo::GeoPoint(geo) => geo.mirror_y().into(),
+            Geo::GeoMCircle(geo) => geo.mirror_y().into(),
+            Geo::GeoCubicBezier(geo) => geo.mirror_y().into(),
+            Geo::GeoLogic(geo) => geo.mirror_y().into(),
         }
     }
 }
