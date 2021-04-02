@@ -118,22 +118,22 @@ impl Scale for LineSegment {
 }
 
 impl Mirror for LineSegment {
-  fn mirror_x(&self) -> Self {
+    fn mirror_x(&self) -> Self {
         LineSegment {
             a: P2::new(self.b.x, self.a.y),
             b: P2::new(self.a.x, self.b.y),
             normal: Normal::new_unchecked(V2::new(-self.normal.x, self.normal.y)),
             direction: U2::new_unchecked(V2::new(-self.direction.x, self.direction.y)),
         }
-  }
-  fn mirror_y(&self) -> Self {
+    }
+    fn mirror_y(&self) -> Self {
         LineSegment {
             a: P2::new(self.a.x, self.b.y),
             b: P2::new(self.b.x, self.a.y),
             normal: Normal::new_unchecked(V2::new(self.normal.x, -self.normal.y)),
             direction: U2::new_unchecked(V2::new(self.direction.x, -self.direction.y)),
         }
-  }
+    }
 }
 
 impl ReflectOn<Line> for LineSegment {
@@ -218,7 +218,9 @@ impl Intersect<LineSegment> for LineSegment {
         let sline: Line = self.into();
         let oline: Line = other.into();
         if let Some((v, r, s)) = sline.intersect(&oline) {
-            if (r < 0.0 || r > 1.0) || (s < 0.0 || s > 1.0) {
+            if (r < (0.0 + EPSILON) || r > (1.0 - EPSILON))
+                || (s < (0.0 + EPSILON) || s > (1.0 - EPSILON))
+            {
                 None
             } else {
                 Some(v)
