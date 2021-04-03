@@ -217,13 +217,15 @@ impl Intersect<LineSegment> for LineSegment {
     fn intersect(&self, other: &LineSegment) -> Option<P2> {
         let sline: Line = self.into();
         let oline: Line = other.into();
-        if let Some((v, r, s)) = sline.intersect(&oline) {
-            if (r < (0.0 + EPSILON) || r > (1.0 - EPSILON))
-                || (s < (0.0 + EPSILON) || s > (1.0 - EPSILON))
+        if let Some((p, r, s)) = sline.intersect(&oline) {
+            if r >= -EPSILON
+                && r.powi(2) <= (self.length_sq() + EPSILON)
+                && s >= -EPSILON
+                && s.powi(2) <= (other.length_sq() + EPSILON)
             {
-                None
+                Some(p)
             } else {
-                Some(v)
+                None
             }
         } else {
             None
