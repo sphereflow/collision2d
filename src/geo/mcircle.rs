@@ -140,7 +140,7 @@ impl Intersect<Circle> for MCircle {
             .chain(circle.intersect(&cb).into_iter())
             .chain(circle.intersect(&lsa).into_iter())
             .chain(circle.intersect(&lsb).into_iter())
-            .flat_map(|oot| oot.into_iter());
+            .flatten();
         let mut res: Option<OneOrTwo<P2>> = None;
         for p in points {
             // check wether point is on perimeter
@@ -176,7 +176,7 @@ impl Intersect<MCircle> for MCircle {
             .chain(mcircle.intersect(&cb).into_iter())
             .chain(mcircle.intersect(&lsa).into_iter())
             .chain(mcircle.intersect(&lsb).into_iter())
-            .flat_map(|oot| oot.into_iter());
+            .flatten();
         let mut res: Option<OneOrTwo<P2>> = None;
         for p in points {
             // check wether point is on perimeter
@@ -369,10 +369,7 @@ impl ReflectOn<LineSegment> for MCircle {
         }
         let mut shifted = *ls;
         shifted.shift(shiftv * self.radius);
-        let mut ret = Vec::new();
-        ret.push(Geo::GeoLineSegment(shifted));
-        ret.push(Geo::GeoLineSegment(self.path));
-        ret
+        vec![Geo::GeoLineSegment(shifted), Geo::GeoLineSegment(self.path)]
     }
 }
 
@@ -455,8 +452,8 @@ impl ReflectOn<Rect> for MCircle {
     }
 }
 
-impl ReflectOn<AABB> for MCircle {
-    fn reflect_on_normal(&self, other: &AABB) -> Option<(Self, V2)> {
+impl ReflectOn<Aabb> for MCircle {
+    fn reflect_on_normal(&self, other: &Aabb) -> Option<(Self, V2)> {
         self.reflect_on_normal(&other.to_rect())
     }
 }
@@ -543,7 +540,7 @@ impl CanCollideWith<Ray> for MCircle {}
 impl CanCollideWith<LineSegment> for MCircle {}
 impl CanCollideWith<Circle> for MCircle {}
 impl CanCollideWith<Rect> for MCircle {}
-impl CanCollideWith<AABB> for MCircle {}
+impl CanCollideWith<Aabb> for MCircle {}
 impl CanCollideWith<MCircle> for MCircle {}
 
 impl GeoT for MCircle {}

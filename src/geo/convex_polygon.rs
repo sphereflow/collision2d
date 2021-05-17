@@ -5,7 +5,7 @@ pub struct ConvexPolygon {
     /// Rotation matrix
     rotation: Rot2,
     /// Bounding box
-    aabb: AABB,
+    aabb: Aabb,
     /// Points relative to origin sorted in clockwise direction
     /// The first and last point should be the same to make functions witch call
     /// points.iter().windows(2) easier to implement
@@ -13,7 +13,7 @@ pub struct ConvexPolygon {
 }
 
 impl ConvexPolygon {
-    pub fn new_convex_hull(points: &Vec<P2>) -> Self {
+    pub fn new_convex_hull(points: &[P2]) -> Self {
         let mut all_points: Vec<V2> = points.iter().map(|p| p.coords).collect();
 
         // calculate the bounding box and the origin
@@ -29,7 +29,7 @@ impl ConvexPolygon {
             max_y = max_y.max(p.y);
             origin += p;
         }
-        let aabb = AABB::from_tlbr(max_y, min_x, min_y, max_x);
+        let aabb = Aabb::from_tlbr(max_y, min_x, min_y, max_x);
         origin.x /= all_points.len() as Float;
         origin.y /= all_points.len() as Float;
 
@@ -52,7 +52,7 @@ impl ConvexPolygon {
         right.retain(|p| p.x >= 0.);
         // sort the left side bottom to top (semi clockwise)
         left.sort_unstable_by(|p1, p2| {
-            if p1.y == p2.y {
+            if (p1.y - p2.y).abs() < Float::EPSILON {
                 // high to low
                 p2.x.partial_cmp(&p1.x)
                     .expect("convex hull: could not sort left side")
@@ -64,7 +64,7 @@ impl ConvexPolygon {
         });
         // sort the right side top to bottom
         right.sort_unstable_by(|p1, p2| {
-            if p1.y == p2.y {
+            if (p1.y - p2.y).abs() < Float::EPSILON {
                 // low to high
                 p1.x.partial_cmp(&p2.x)
                     .expect("convex hull: could not sort left side")
@@ -155,7 +155,7 @@ impl ConvexPolygon {
         self.points = hull_points;
     }
 
-    pub fn calc_aabb(points: &Vec<P2>) -> AABB {
+    pub fn calc_aabb(points: &[P2]) -> Aabb {
         // calculate the bounding box
         let mut min_x = Float::MAX;
         let mut min_y = Float::MAX;
@@ -167,7 +167,7 @@ impl ConvexPolygon {
             min_y = min_y.min(p.y);
             max_y = max_y.max(p.y);
         }
-        AABB::from_tlbr(max_y, min_x, min_y, max_x)
+        Aabb::from_tlbr(max_y, min_x, min_y, max_x)
     }
 
     pub fn get_line_segments(&self) -> Vec<LineSegment> {
@@ -312,10 +312,10 @@ impl Mirror for ConvexPolygon {
 impl<T: HasOrigin + HasDirection + Intersect<LineSegment, Intersection = P2>> Intersect<T>
     for ConvexPolygon
 {
-    type Intersection = OneOrTwo<(P2, Normal)>;
+    type Intersection = OneOrTwo<Reflection>;
     fn intersect(&self, l: &T) -> Option<Self::Intersection> {
         let global_points = self.get_global_points();
-        let mut res: Option<OneOrTwo<(P2, Normal)>> = None;
+        let mut res: Option<OneOrTwo<Reflection>> = None;
         for w in global_points
             .iter()
             .map(|p| separation_axis_projection(&l.get_origin(), &l.get_direction(), p))
@@ -344,10 +344,10 @@ impl<T: HasOrigin + HasDirection + Intersect<LineSegment, Intersection = P2>> In
 }
 
 impl Intersect<Ray> for ConvexPolygon {
-    type Intersection = OneOrTwo<(P2, Normal)>;
+    type Intersection = OneOrTwo<Reflection>;
     fn intersect(&self, ray: &Ray) -> Option<Self::Intersection> {
         let global_points = self.get_global_points();
-        let mut res: Option<OneOrTwo<(P2, Normal)>> = None;
+        let mut res: Option<OneOrTwo<Reflection>> = None;
         for w in global_points
             .iter()
             .map(|p| separation_axis_projection(&ray.get_origin(), &ray.get_direction(), p))

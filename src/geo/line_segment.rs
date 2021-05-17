@@ -17,8 +17,8 @@ impl LineSegment {
         LineSegment {
             a,
             b,
-            direction,
             normal,
+            direction,
         }
     }
 
@@ -192,10 +192,10 @@ impl Intersect<Line> for LineSegment {
     fn intersect(&self, l: &Line) -> Option<P2> {
         let sline: Line = self.into();
         if let Some((v, r, _)) = sline.intersect(l) {
-            if r < 0.0 || r > 1.0 {
-                None
-            } else {
+            if (0.0..=1.0).contains(&r) {
                 Some(v)
+            } else {
+                None
             }
         } else {
             None
@@ -295,7 +295,7 @@ impl ReflectOn<Circle> for LineSegment {
 }
 
 impl ReflectOn<Rect> for LineSegment {}
-impl ReflectOn<AABB> for LineSegment {}
+impl ReflectOn<Aabb> for LineSegment {}
 impl ReflectOn<MCircle> for LineSegment {}
 
 impl CanCollideWith<Line> for LineSegment {}
@@ -303,7 +303,7 @@ impl CanCollideWith<Ray> for LineSegment {}
 impl CanCollideWith<LineSegment> for LineSegment {}
 impl CanCollideWith<Circle> for LineSegment {}
 impl CanCollideWith<Rect> for LineSegment {}
-impl CanCollideWith<AABB> for LineSegment {}
+impl CanCollideWith<Aabb> for LineSegment {}
 impl CanCollideWith<MCircle> for LineSegment {}
 
 impl GeoT for LineSegment {}

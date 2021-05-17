@@ -3,14 +3,14 @@ extern crate nalgebra as na;
 use super::*;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub struct AABB {
+pub struct Aabb {
     // origin is in the middle
     pub origin: P2,
     pub width: Float,
     pub height: Float,
 }
 
-impl AABB {
+impl Aabb {
     pub fn points(&self) -> RectPoints {
         let top_right = V2::new(self.width * 0.5, self.height * 0.5);
         let bottom_right = V2::new(self.width * 0.5, -self.height * 0.5);
@@ -90,9 +90,9 @@ impl AABB {
         self.to_rect().seperated_by_line(l)
     }
 
-    pub fn from_tlbr(top: Float, left: Float, bottom: Float, right: Float) -> AABB {
+    pub fn from_tlbr(top: Float, left: Float, bottom: Float, right: Float) -> Aabb {
         let origin = P2::new((left + right) * 0.5, (bottom + top) * 0.5);
-        AABB {
+        Aabb {
             origin,
             width: (right - left).abs(),
             height: (top - bottom).abs(),
@@ -100,7 +100,7 @@ impl AABB {
     }
 }
 
-impl Intersect<LineSegment> for AABB {
+impl Intersect<LineSegment> for Aabb {
     type Intersection = OneOrTwo<P2>;
 
     fn intersect(&self, ls: &LineSegment) -> Option<OneOrTwo<P2>> {
@@ -108,7 +108,7 @@ impl Intersect<LineSegment> for AABB {
     }
 }
 
-impl Intersect<Circle> for AABB {
+impl Intersect<Circle> for Aabb {
     type Intersection = OneOrTwo<P2>;
 
     fn intersect(&self, s: &Circle) -> Option<OneOrTwo<P2>> {
@@ -129,7 +129,7 @@ impl Intersect<Circle> for AABB {
     }
 }
 
-impl Intersect<Rect> for AABB {
+impl Intersect<Rect> for Aabb {
     type Intersection = Vec<P2>;
 
     fn intersect(&self, r: &Rect) -> Option<Vec<P2>> {
@@ -137,10 +137,10 @@ impl Intersect<Rect> for AABB {
     }
 }
 
-impl Intersect<AABB> for AABB {
+impl Intersect<Aabb> for Aabb {
     type Intersection = ();
 
-    fn intersect(&self, other: &AABB) -> Option<()> {
+    fn intersect(&self, other: &Aabb) -> Option<()> {
         let p = self.origin - other.origin;
         let w2 = self.width * 0.5 + other.width * 0.5;
         let h2 = self.height * 0.5 + other.height * 0.5;
@@ -152,7 +152,7 @@ impl Intersect<AABB> for AABB {
     }
 }
 
-impl HasOrigin for AABB {
+impl HasOrigin for Aabb {
     fn get_origin(&self) -> P2 {
         self.origin
     }
@@ -161,20 +161,20 @@ impl HasOrigin for AABB {
     }
 }
 
-impl Contains for AABB {
+impl Contains for Aabb {
     fn contains(&self, p: &P2) -> bool {
         let trans = p - self.origin;
         Float::abs(trans.x) < (self.width * 0.5) && Float::abs(trans.y) < (self.height * 0.5)
     }
 }
 
-impl ClosestPoint for AABB {
+impl ClosestPoint for Aabb {
     fn closest_point_to(&self, p: &P2) -> P2 {
         self.to_rect().closest_point_to(p)
     }
 }
 
-impl Distance for AABB {
+impl Distance for Aabb {
     fn distance(&self, p: &P2) -> Float {
         let abs_x = (p.x - self.origin.x).abs();
         let abs_y = (p.y - self.origin.y).abs();
@@ -194,7 +194,7 @@ impl Distance for AABB {
     }
 }
 
-impl Mirror for AABB {
+impl Mirror for Aabb {
     fn mirror_x(&self) -> Self {
         *self
     }
@@ -203,9 +203,9 @@ impl Mirror for AABB {
     }
 }
 
-impl Distribution<AABB> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> AABB {
-        AABB {
+impl Distribution<Aabb> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Aabb {
+        Aabb {
             origin: rng.gen(),
             width: rng.gen(),
             height: rng.gen(),
@@ -213,20 +213,20 @@ impl Distribution<AABB> for Standard {
     }
 }
 
-impl ReflectOn<Line> for AABB {}
-impl ReflectOn<Ray> for AABB {}
-impl ReflectOn<LineSegment> for AABB {}
-impl ReflectOn<Circle> for AABB {}
-impl ReflectOn<Rect> for AABB {}
-impl ReflectOn<AABB> for AABB {}
-impl ReflectOn<MCircle> for AABB {}
+impl ReflectOn<Line> for Aabb {}
+impl ReflectOn<Ray> for Aabb {}
+impl ReflectOn<LineSegment> for Aabb {}
+impl ReflectOn<Circle> for Aabb {}
+impl ReflectOn<Rect> for Aabb {}
+impl ReflectOn<Aabb> for Aabb {}
+impl ReflectOn<MCircle> for Aabb {}
 
-impl CanCollideWith<Line> for AABB {}
-impl CanCollideWith<Ray> for AABB {}
-impl CanCollideWith<LineSegment> for AABB {}
-impl CanCollideWith<Circle> for AABB {}
-impl CanCollideWith<Rect> for AABB {}
-impl CanCollideWith<AABB> for AABB {}
-impl CanCollideWith<MCircle> for AABB {}
+impl CanCollideWith<Line> for Aabb {}
+impl CanCollideWith<Ray> for Aabb {}
+impl CanCollideWith<LineSegment> for Aabb {}
+impl CanCollideWith<Circle> for Aabb {}
+impl CanCollideWith<Rect> for Aabb {}
+impl CanCollideWith<Aabb> for Aabb {}
+impl CanCollideWith<MCircle> for Aabb {}
 
-impl GeoT for AABB {}
+impl GeoT for Aabb {}

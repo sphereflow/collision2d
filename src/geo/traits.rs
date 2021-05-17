@@ -86,14 +86,14 @@ where
 }
 
 impl<T: HasDirection + HasOrigin> Rotate for T {
-  fn get_rotation(&self) -> Rot2 {
-      let d = self.get_direction();
-      // normal.x = -d.y normal.y = d.x
-      Rot2::from_matrix_unchecked(Matrix2::new(d.x, -d.y, d.y, d.x))
-  }
-  fn set_rotation(&mut self, rotation: &Rot2) {
+    fn get_rotation(&self) -> Rot2 {
+        let d = self.get_direction();
+        // normal.x = -d.y normal.y = d.x
+        Rot2::from_matrix_unchecked(Matrix2::new(d.x, -d.y, d.y, d.x))
+    }
+    fn set_rotation(&mut self, rotation: &Rot2) {
         self.set_direction(Unit::new_unchecked(rotation.matrix().column(0).into()));
-  }
+    }
 }
 
 impl Rotate for P2 {
@@ -192,7 +192,7 @@ where
         + CanCollideWith<LineSegment>
         + CanCollideWith<Circle>
         + CanCollideWith<Rect>
-        + CanCollideWith<AABB>
+        + CanCollideWith<Aabb>
         + CanCollideWith<MCircle>,
 {
 }

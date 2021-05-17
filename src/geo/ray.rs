@@ -15,8 +15,8 @@ impl Ray {
         let direction = Unit::new_normalize(direction);
         Ray {
             origin,
-            direction,
             normal,
+            direction,
         }
     }
 
@@ -138,7 +138,7 @@ impl Ray {
 
 impl<T> ReflectOn<T> for Ray
 where
-    Ray: Intersect<T, Intersection = (P2, Normal)>,
+    Ray: Intersect<T, Intersection = Reflection>,
 {
     fn reflect_on_normal_intersect(&self, other: &T) -> Option<(Self, V2, P2)> {
         self.intersect(other)
@@ -173,8 +173,8 @@ impl ReflectOn<Rect> for Ray {
     }
 }
 
-impl ReflectOn<AABB> for Ray {
-    fn reflect_on_normal_intersect(&self, rect: &AABB) -> Option<(Ray, V2, P2)> {
+impl ReflectOn<Aabb> for Ray {
+    fn reflect_on_normal_intersect(&self, rect: &Aabb) -> Option<(Ray, V2, P2)> {
         let mut closest: Option<(Ray, V2, P2)> = None;
         for ls in rect.line_segments().iter() {
             if let Some((ray, n, i)) = self.reflect_on_normal_intersect(ls) {
@@ -236,8 +236,8 @@ impl ReflectOn<Geo> for Ray {
 }
 
 impl Intersect<Line> for Ray {
-    type Intersection = (P2, Normal);
-    fn intersect(&self, l: &Line) -> Option<(P2, Normal)> {
+    type Intersection = Reflection;
+    fn intersect(&self, l: &Line) -> Option<Reflection> {
         if let Some((v, r, _)) = self.to_line().intersect(l) {
             if r < 0.0 {
                 None
@@ -251,8 +251,8 @@ impl Intersect<Line> for Ray {
 }
 
 impl Intersect<Ray> for Ray {
-    type Intersection = (P2, Normal);
-    fn intersect(&self, other: &Ray) -> Option<(P2, Normal)> {
+    type Intersection = Reflection;
+    fn intersect(&self, other: &Ray) -> Option<Reflection> {
         if let Some((v, r, s)) = self.to_line().intersect(&other.to_line()) {
             if r < 0.0 || s < 0.0 {
                 None
@@ -266,8 +266,8 @@ impl Intersect<Ray> for Ray {
 }
 
 impl Intersect<LineSegment> for Ray {
-    type Intersection = (P2, Normal);
-    fn intersect(&self, other: &LineSegment) -> Option<(P2, Normal)> {
+    type Intersection = Reflection;
+    fn intersect(&self, other: &LineSegment) -> Option<Reflection> {
         let oline: Line = other.into();
         if let Some((v, r, s)) = self.to_line().intersect(&oline) {
             if r < 0.0 || s < 0.0 || s * s > other.length_sq() {
@@ -282,8 +282,8 @@ impl Intersect<LineSegment> for Ray {
 }
 
 impl Intersect<Circle> for Ray {
-    type Intersection = OneOrTwo<(P2, Normal)>;
-    fn intersect(&self, circle: &Circle) -> Option<OneOrTwo<(P2, Normal)>> {
+    type Intersection = OneOrTwo<Reflection>;
+    fn intersect(&self, circle: &Circle) -> Option<OneOrTwo<Reflection>> {
         if let Some((r, s)) = circle
             .intersect(&self.to_line())
             .and_then(|(r, s)| smallest_positive_sort(r, s))
@@ -305,8 +305,8 @@ impl Intersect<Circle> for Ray {
 }
 
 impl Intersect<MCircle> for Ray {
-    type Intersection = (P2, Normal);
-    fn intersect(&self, mcircle: &MCircle) -> Option<(P2, Normal)> {
+    type Intersection = Reflection;
+    fn intersect(&self, mcircle: &MCircle) -> Option<Reflection> {
         let circle = mcircle.circle_b();
         circle
             .intersect(&self.to_line())
@@ -322,7 +322,7 @@ impl Intersect<MCircle> for Ray {
 }
 
 impl Intersect<Rect> for Ray {
-    type Intersection = OneOrTwo<(P2, Normal)>;
+    type Intersection = OneOrTwo<Reflection>;
     fn intersect(&self, rect: &Rect) -> Option<Self::Intersection> {
         let mut intersect: Option<Self::Intersection> = None;
         for ls in rect.line_segments().iter() {
@@ -339,9 +339,9 @@ impl Intersect<Rect> for Ray {
     }
 }
 
-impl Intersect<AABB> for Ray {
-    type Intersection = OneOrTwo<(P2, Normal)>;
-    fn intersect(&self, aabb: &AABB) -> Option<Self::Intersection> {
+impl Intersect<Aabb> for Ray {
+    type Intersection = OneOrTwo<Reflection>;
+    fn intersect(&self, aabb: &Aabb) -> Option<Self::Intersection> {
         let mut closest: Option<Self::Intersection> = None;
         for ls in aabb.line_segments().iter() {
             if let Some((v, n)) = self.intersect(ls) {
@@ -361,21 +361,21 @@ impl Intersect<AABB> for Ray {
 }
 
 impl Intersect<ConvexPolygon> for Ray {
-    type Intersection = OneOrTwo<(P2, Normal)>;
+    type Intersection = OneOrTwo<Reflection>;
     fn intersect(&self, cpoly: &ConvexPolygon) -> Option<Self::Intersection> {
         cpoly.intersect(self)
     }
 }
 
 impl Intersect<CubicBezier> for Ray {
-    type Intersection = (P2, Normal);
+    type Intersection = Reflection;
     fn intersect(&self, cbez: &CubicBezier) -> Option<Self::Intersection> {
         cbez.intersect(self)
     }
 }
 
 impl Intersect<Logic> for Ray {
-    type Intersection = Vec<(P2, Normal)>;
+    type Intersection = Vec<Reflection>;
     fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
         let a = l.get_a();
         let b = l.get_b();
@@ -407,7 +407,7 @@ impl Intersect<Logic> for Ray {
 }
 
 impl Intersect<Geo> for Ray {
-    type Intersection = Vec<(P2, Normal)>;
+    type Intersection = Vec<Reflection>;
     fn intersect(&self, other: &Geo) -> Option<Self::Intersection> {
         match other {
             Geo::GeoRay(ray) => self.intersect(ray).map(|p| vec![p]),
@@ -520,7 +520,7 @@ impl CanCollideWith<Ray> for Ray {}
 impl CanCollideWith<LineSegment> for Ray {}
 impl CanCollideWith<Circle> for Ray {}
 impl CanCollideWith<Rect> for Ray {}
-impl CanCollideWith<AABB> for Ray {}
+impl CanCollideWith<Aabb> for Ray {}
 impl CanCollideWith<MCircle> for Ray {}
 
 impl GeoT for Ray {}

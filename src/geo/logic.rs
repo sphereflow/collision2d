@@ -117,7 +117,7 @@ impl ClosestPoint for Logic {
             }
         }
         let mut res = candidates[0];
-        for candidate in candidates[1..].into_iter() {
+        for candidate in candidates[1..].iter() {
             if distance(&res, p) > distance(candidate, p) {
                 res = *candidate;
             }

@@ -114,23 +114,23 @@ impl Mirror for CubicBezier {
 }
 
 impl Intersect<Ray> for CubicBezier {
-    type Intersection = (P2, Normal);
+    type Intersection = Reflection;
     fn intersect(&self, ray: &Ray) -> Option<Self::Intersection> {
         let rot = Rot2::rotation_between(&V2::new(1., 0.), &ray.get_direction());
         // inv translate => inv rotate
-        let p: Vec<P2> = self
+        let points: Vec<P2> = self
             .points
             .iter()
             .map(|p| P2::from(rot.inverse() * (p - ray.get_origin().coords).coords))
             .collect();
         // intersect: get closest positive t
-        let a = 3. * (p[1] - p[2]) - p[0].coords + p[3].coords;
-        let b = 3. * (p[0] - 2. * p[1] + p[2].coords);
-        let c = 3. * (p[1] - p[0]);
-        let d = p[0];
-        let mut rs: Vec<(Float, Float)> = cubic_roots(0, b.y / a.y, c.y / a.y, d.y / a.y)
+        let pa = 3. * (points[1] - points[2]) - points[0].coords + points[3].coords;
+        let pb = 3. * (points[0] - 2. * points[1] + points[2].coords);
+        let pc = 3. * (points[1] - points[0]);
+        let pd = points[0];
+        let mut rs: Vec<(Float, Float)> = cubic_roots(0, pb.y / pa.y, pc.y / pa.y, pd.y / pa.y)
             .iter()
-            .map(|t| (t.powi(3) * a.x + t.powi(2) * b.x + t * c.x + d.x, *t))
+            .map(|t| (t.powi(3) * pa.x + t.powi(2) * pb.x + t * pc.x + pd.x, *t))
             .filter(|(r, t)| *t >= 0. && *t <= 1. && *r >= 0.)
             .collect();
         get_smallest_positive_by(&mut rs, |(r, _t)| *r)
@@ -139,23 +139,23 @@ impl Intersect<Ray> for CubicBezier {
 }
 
 impl Intersect<LineSegment> for CubicBezier {
-    type Intersection = Vec<(P2, Normal)>;
+    type Intersection = Vec<Reflection>;
     fn intersect(&self, ls: &LineSegment) -> Option<Self::Intersection> {
         let rot = Rot2::rotation_between(&V2::new(1., 0.), &ls.get_direction());
         // inv translate => inv rotate
-        let p: Vec<P2> = self
+        let points: Vec<P2> = self
             .points
             .iter()
             .map(|p| P2::from(rot.inverse() * (p - ls.get_origin().coords).coords))
             .collect();
         // intersect: get closest positive t
-        let a = 3. * (p[1] - p[2]) - p[0].coords + p[3].coords;
-        let b = 3. * (p[0] - 2. * p[1] + p[2].coords);
-        let c = 3. * (p[1] - p[0]);
-        let d = p[0];
-        let intersections: Vec<_> = cubic_roots(0, b.y / a.y, c.y / a.y, d.y / a.y)
+        let pa = 3. * (points[1] - points[2]) - points[0].coords + points[3].coords;
+        let pb = 3. * (points[0] - 2. * points[1] + points[2].coords);
+        let pc = 3. * (points[1] - points[0]);
+        let pd = points[0];
+        let intersections: Vec<_> = cubic_roots(0, pb.y / pa.y, pc.y / pa.y, pd.y / pa.y)
             .iter()
-            .map(|t| (t.powi(3) * a.x + t.powi(2) * b.x + t * c.x + d.x, *t))
+            .map(|t| (t.powi(3) * pa.x + t.powi(2) * pb.x + t * pc.x + pd.x, *t))
             .filter(|(r, t)| *t >= 0. && *t <= 1. && *r >= 0. && *r <= 1.)
             .map(|(r, t)| (ls.eval_at_r(r), self.normal_at_t(t)))
             .collect();
@@ -167,23 +167,23 @@ impl Intersect<LineSegment> for CubicBezier {
 }
 
 impl Intersect<Line> for CubicBezier {
-    type Intersection = (P2, Normal);
+    type Intersection = Reflection;
     fn intersect(&self, line: &Line) -> Option<Self::Intersection> {
         let rot = Rot2::rotation_between(&V2::new(1., 0.), &line.get_direction());
         // inv translate => inv rotate
-        let p: Vec<P2> = self
+        let points: Vec<P2> = self
             .points
             .iter()
             .map(|p| P2::from(rot.inverse() * (p - line.get_origin().coords).coords))
             .collect();
         // intersect: get closest positive t
-        let a = 3. * (p[1] - p[2]) - p[0].coords + p[3].coords;
-        let b = 3. * (p[0] - 2. * p[1] + p[2].coords);
-        let c = 3. * (p[1] - p[0]);
-        let d = p[0];
-        let mut rs: Vec<(Float, Float)> = cubic_roots(0, b.y / a.y, c.y / a.y, d.y / a.y)
+        let pa = 3. * (points[1] - points[2]) - points[0].coords + points[3].coords;
+        let pb = 3. * (points[0] - 2. * points[1] + points[2].coords);
+        let pc = 3. * (points[1] - points[0]);
+        let pd = points[0];
+        let mut rs: Vec<(Float, Float)> = cubic_roots(0, pb.y / pa.y, pc.y / pa.y, pd.y / pa.y)
             .iter()
-            .map(|t| (t.powi(3) * a.x + t.powi(2) * b.x + t * c.x + d.x, *t))
+            .map(|t| (t.powi(3) * pa.x + t.powi(2) * pb.x + t * pc.x + pd.x, *t))
             .filter(|(_r, t)| *t >= 0. && *t <= 1.)
             .collect();
         get_smallest_positive_by(&mut rs, |(r, _t)| *r)

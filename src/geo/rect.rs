@@ -127,8 +127,8 @@ impl Rect {
 }
 
 impl Intersect<Ray> for Rect {
-    type Intersection = OneOrTwo<(P2, Normal)>;
-    fn intersect(&self, ray: &Ray) -> Option<OneOrTwo<(P2, Normal)>> {
+    type Intersection = OneOrTwo<Reflection>;
+    fn intersect(&self, ray: &Ray) -> Option<OneOrTwo<Reflection>> {
         ray.intersect(self)
     }
 }
@@ -242,7 +242,7 @@ impl Mirror for Rect {
 
 impl Contains for Rect {
     fn contains(&self, p: &P2) -> bool {
-        AABB {
+        Aabb {
             origin: P2::new(0.0, 0.0),
             width: self.width,
             height: self.height,
@@ -299,7 +299,7 @@ impl ReflectOn<Ray> for Rect {}
 impl ReflectOn<LineSegment> for Rect {}
 impl ReflectOn<Circle> for Rect {}
 impl ReflectOn<Rect> for Rect {}
-impl ReflectOn<AABB> for Rect {}
+impl ReflectOn<Aabb> for Rect {}
 impl ReflectOn<MCircle> for Rect {}
 
 impl CanCollideWith<Line> for Rect {}
@@ -307,7 +307,7 @@ impl CanCollideWith<Ray> for Rect {}
 impl CanCollideWith<LineSegment> for Rect {}
 impl CanCollideWith<Circle> for Rect {}
 impl CanCollideWith<Rect> for Rect {}
-impl CanCollideWith<AABB> for Rect {}
+impl CanCollideWith<Aabb> for Rect {}
 impl CanCollideWith<MCircle> for Rect {}
 
 impl GeoT for Rect {}

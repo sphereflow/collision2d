@@ -7,6 +7,8 @@ pub type V2 = Vector2<Float>;
 pub type U2 = Unit<V2>;
 pub type Normal = Unit<V2>;
 pub type Rot2 = Rotation2<Float>;
+pub type Reflection = (P2, Normal);
+pub type ClosestReflection = (Reflection, Vec<Reflection>);
 pub const EPSILON: Float = 0.000_001;
 
 pub struct OneOrTwo<T: Copy + Clone> {
@@ -141,15 +143,15 @@ pub fn first<A, B>((a, _): (A, B)) -> A {
     a
 }
 
-pub fn nearest_option<T: Iterator<Item = (P2, Normal)>, U: Iterator<Item = (P2, Normal)>>(
+pub fn nearest_option<T: Iterator<Item = Reflection>, U: Iterator<Item = Reflection>>(
     p: &P2,
     ova: Option<T>,
     ovb: Option<U>,
-) -> Option<((P2, Normal), Vec<(P2, Normal)>)> {
-    let oa: Option<((P2, Normal), Vec<(P2, Normal)>)> = ova.and_then(|iter| {
+) -> Option<ClosestReflection> {
+    let oa: Option<ClosestReflection> = ova.and_then(|iter| {
         let mut min_distance = Float::MAX;
         let mut res = None;
-        let v: Vec<(P2, Normal)> = iter.collect();
+        let v: Vec<Reflection> = iter.collect();
         for a in v.iter() {
             let dist = distance(p, &a.0);
             if dist < min_distance {
@@ -160,10 +162,10 @@ pub fn nearest_option<T: Iterator<Item = (P2, Normal)>, U: Iterator<Item = (P2, 
         res.map(|p| (p, v))
     });
 
-    let ob: Option<((P2, Normal), Vec<(P2, Normal)>)> = ovb.and_then(|iter| {
+    let ob: Option<ClosestReflection> = ovb.and_then(|iter| {
         let mut min_distance = Float::MAX;
         let mut res = None;
-        let v: Vec<(P2, Normal)> = iter.collect();
+        let v: Vec<Reflection> = iter.collect();
         for b in v.iter() {
             let dist = distance(p, &b.0);
             if dist < min_distance {
@@ -188,15 +190,15 @@ pub fn nearest_option<T: Iterator<Item = (P2, Normal)>, U: Iterator<Item = (P2, 
     }
 }
 
-pub fn farthest_option<T: Iterator<Item = (P2, Normal)>, U: Iterator<Item = (P2, Normal)>>(
+pub fn farthest_option<T: Iterator<Item = Reflection>, U: Iterator<Item = Reflection>>(
     p: &P2,
     ova: Option<T>,
     ovb: Option<U>,
-) -> Option<((P2, Normal), Vec<(P2, Normal)>)> {
-    let oa: Option<((P2, Normal), Vec<(P2, Normal)>)> = ova.and_then(|iter| {
+) -> Option<ClosestReflection> {
+    let oa: Option<ClosestReflection> = ova.and_then(|iter| {
         let mut max_distance = 0.;
         let mut res = None;
-        let v: Vec<(P2, Normal)> = iter.collect();
+        let v: Vec<Reflection> = iter.collect();
         for a in v.iter() {
             let dist = distance(p, &a.0);
             if dist > max_distance {
@@ -207,10 +209,10 @@ pub fn farthest_option<T: Iterator<Item = (P2, Normal)>, U: Iterator<Item = (P2,
         res.map(|a| (a, v))
     });
 
-    let ob: Option<((P2, Normal), Vec<(P2, Normal)>)> = ovb.and_then(|iter| {
+    let ob: Option<ClosestReflection> = ovb.and_then(|iter| {
         let mut max_distance = 0.;
         let mut res = None;
-        let v: Vec<(P2, Normal)> = iter.collect();
+        let v: Vec<Reflection> = iter.collect();
         for b in v.iter() {
             let dist = distance(p, &b.0);
             if dist > max_distance {

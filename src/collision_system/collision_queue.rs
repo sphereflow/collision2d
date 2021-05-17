@@ -73,6 +73,12 @@ impl CollisionQueue {
     }
 }
 
+impl Default for CollisionQueue {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Iterator for CollisionQueue {
     type Item = Collision;
     fn next(&mut self) -> Option<Self::Item> {

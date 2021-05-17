@@ -239,7 +239,7 @@ impl Distribution<Line> for Standard {
 
 impl ReflectOn<Circle> for Line {}
 impl ReflectOn<Rect> for Line {}
-impl ReflectOn<AABB> for Line {}
+impl ReflectOn<Aabb> for Line {}
 impl ReflectOn<MCircle> for Line {}
 
 impl CanCollideWith<Line> for Line {}
@@ -247,7 +247,7 @@ impl CanCollideWith<Ray> for Line {}
 impl CanCollideWith<LineSegment> for Line {}
 impl CanCollideWith<Circle> for Line {}
 impl CanCollideWith<Rect> for Line {}
-impl CanCollideWith<AABB> for Line {}
+impl CanCollideWith<Aabb> for Line {}
 impl CanCollideWith<MCircle> for Line {}
 
 impl GeoT for Line {}

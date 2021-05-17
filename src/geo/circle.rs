@@ -73,10 +73,8 @@ impl Intersect<LineSegment> for Circle {
                     }
                 }
                 return Some(res);
-            } else {
-                if between(s, 0.0, 1.0) {
-                    return Some(OneOrTwo::new(line.eval_at_r(s)));
-                }
+            } else if between(s, 0.0, 1.0) {
+                return Some(OneOrTwo::new(line.eval_at_r(s)));
             }
         }
         None
@@ -136,7 +134,7 @@ impl Scale for Circle {
 
 impl Rotate for Circle {
     fn get_rotation(&self) -> Rot2 {
-      Rot2::identity()
+        Rot2::identity()
     }
     fn set_rotation(&mut self, _rotation: &Rot2) {}
 }
@@ -194,7 +192,7 @@ impl ReflectOn<Ray> for Circle {}
 impl ReflectOn<LineSegment> for Circle {}
 impl ReflectOn<Circle> for Circle {}
 impl ReflectOn<Rect> for Circle {}
-impl ReflectOn<AABB> for Circle {}
+impl ReflectOn<Aabb> for Circle {}
 impl ReflectOn<MCircle> for Circle {}
 
 impl CanCollideWith<Line> for Circle {}
@@ -202,7 +200,7 @@ impl CanCollideWith<Ray> for Circle {}
 impl CanCollideWith<LineSegment> for Circle {}
 impl CanCollideWith<Circle> for Circle {}
 impl CanCollideWith<Rect> for Circle {}
-impl CanCollideWith<AABB> for Circle {}
+impl CanCollideWith<Aabb> for Circle {}
 impl CanCollideWith<MCircle> for Circle {}
 
 impl GeoT for Circle {}
