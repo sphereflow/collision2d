@@ -491,6 +491,7 @@ impl Intersect<Geo> for ConvexPolygon {
             Geo::GeoRect(rect) => self.intersect(rect),
             Geo::GeoCircle(circle) => self.intersect(circle),
             Geo::GeoMCircle(mcircle) => self.intersect(mcircle),
+            Geo::GeoConvexPolygon(cp) => self.intersect(cp),
             Geo::GeoCubicBezier(cb) => self.intersect(cb),
             Geo::GeoLogic(logic) => self.intersect(logic),
         }

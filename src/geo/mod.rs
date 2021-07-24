@@ -37,6 +37,7 @@ pub enum Geo {
     GeoLineSegment(LineSegment),
     GeoPoint(P2),
     GeoMCircle(MCircle),
+    GeoConvexPolygon(ConvexPolygon),
     GeoCubicBezier(CubicBezier),
     GeoLogic(Logic),
 }
@@ -54,6 +55,7 @@ impl Geo {
             Geo::GeoLineSegment(ls) => ls.distance(&pos) < max_distance,
             Geo::GeoPoint(p) => distance(p, &pos) < max_distance,
             Geo::GeoMCircle(mc) => mc.path.distance(&pos) - mc.radius < max_distance,
+            Geo::GeoConvexPolygon(cp) => cp.distance(&pos) < max_distance,
             Geo::GeoCubicBezier(_cb) => false,
             Geo::GeoLogic(l) => l.contains(pos),
         }
@@ -147,6 +149,7 @@ impl Scale for Geo {
             Geo::GeoCircle(g) => g.scale(scale_x, scale_y),
             Geo::GeoRay(g) => g.scale(scale_x, scale_y),
             Geo::GeoLineSegment(g) => g.scale(scale_x, scale_y),
+            Geo::GeoConvexPolygon(cp) => cp.scale(scale_x, scale_y),
             Geo::GeoCubicBezier(g) => g.scale(scale_x, scale_y),
             Geo::GeoLogic(g) => g.scale(scale_x, scale_y),
         }
@@ -160,6 +163,7 @@ impl Scale for Geo {
             Geo::GeoCircle(g) => g.scale_position(scale_x, scale_y),
             Geo::GeoRay(g) => g.scale_position(scale_x, scale_y),
             Geo::GeoLineSegment(g) => g.scale_position(scale_x, scale_y),
+            Geo::GeoConvexPolygon(cp) => cp.scale_position(scale_x, scale_y),
             Geo::GeoCubicBezier(g) => g.scale_position(scale_x, scale_y),
             Geo::GeoLogic(g) => g.scale_position(scale_x, scale_y),
         }
@@ -175,6 +179,7 @@ impl HasOrigin for Geo {
             Geo::GeoLineSegment(ls) => ls.eval_at_r(0.5),
             Geo::GeoPoint(p) => *p,
             Geo::GeoMCircle(mc) => mc.path.eval_at_r(0.5),
+            Geo::GeoConvexPolygon(cp) => cp.get_origin(),
             Geo::GeoCubicBezier(cb) => cb.get_origin(),
             Geo::GeoLogic(l) => l.origin,
         }
@@ -188,6 +193,7 @@ impl HasOrigin for Geo {
             Geo::GeoLineSegment(ls) => ls.set_origin(origin),
             Geo::GeoPoint(p) => *p = origin,
             Geo::GeoMCircle(mc) => mc.path.set_origin(origin),
+            Geo::GeoConvexPolygon(cp) => cp.set_origin(origin),
             Geo::GeoCubicBezier(cb) => cb.set_origin(origin),
             Geo::GeoLogic(l) => l.origin = origin,
         }
@@ -203,6 +209,7 @@ impl Contains for Geo {
             Geo::GeoLineSegment(geo) => geo.distance(&p) < EPSILON,
             Geo::GeoPoint(geo) => geo == p,
             Geo::GeoMCircle(geo) => geo.contains(p),
+            Geo::GeoConvexPolygon(geo) => geo.contains(p),
             Geo::GeoCubicBezier(_) => false,
             Geo::GeoLogic(geo) => geo.contains(p),
         }
@@ -218,6 +225,7 @@ impl ClosestPoint for Geo {
             Geo::GeoLineSegment(geo) => geo.closest_point_to(p),
             Geo::GeoPoint(geo) => *geo,
             Geo::GeoMCircle(geo) => geo.closest_point_to(p),
+            Geo::GeoConvexPolygon(geo) => geo.closest_point_to(p),
             Geo::GeoCubicBezier(_) => P2::new(0., 0.),
             Geo::GeoLogic(geo) => geo.closest_point_to(p),
         }
@@ -237,6 +245,7 @@ impl Distance for Geo {
                 origin: g.get_origin(),
             }
             .distance(p),
+            Geo::GeoConvexPolygon(g) => g.distance(p),
             Geo::GeoCubicBezier(_) => 0.,
             Geo::GeoLogic(g) => g.distance(p),
         }
@@ -252,6 +261,7 @@ impl Rotate for Geo {
             Geo::GeoLineSegment(geo) => geo.get_rotation(),
             Geo::GeoPoint(geo) => geo.get_rotation(),
             Geo::GeoMCircle(geo) => geo.get_rotation(),
+            Geo::GeoConvexPolygon(geo) => geo.get_rotation(),
             Geo::GeoCubicBezier(geo) => geo.get_rotation(),
             Geo::GeoLogic(geo) => geo.get_rotation(),
         }
@@ -265,6 +275,7 @@ impl Rotate for Geo {
             Geo::GeoLineSegment(geo) => geo.set_rotation(rotation),
             Geo::GeoPoint(geo) => geo.set_rotation(rotation),
             Geo::GeoMCircle(geo) => geo.set_rotation(rotation),
+            Geo::GeoConvexPolygon(geo) => geo.set_rotation(rotation),
             Geo::GeoCubicBezier(geo) => geo.set_rotation(rotation),
             Geo::GeoLogic(geo) => geo.set_rotation(rotation),
         }
@@ -280,6 +291,7 @@ impl Mirror for Geo {
             Geo::GeoLineSegment(geo) => geo.mirror_x().into(),
             Geo::GeoPoint(geo) => geo.mirror_x().into(),
             Geo::GeoMCircle(geo) => geo.mirror_x().into(),
+            Geo::GeoConvexPolygon(geo) => geo.mirror_x().into(),
             Geo::GeoCubicBezier(geo) => geo.mirror_x().into(),
             Geo::GeoLogic(geo) => geo.mirror_x().into(),
         }
@@ -293,6 +305,7 @@ impl Mirror for Geo {
             Geo::GeoLineSegment(geo) => geo.mirror_y().into(),
             Geo::GeoPoint(geo) => geo.mirror_y().into(),
             Geo::GeoMCircle(geo) => geo.mirror_y().into(),
+            Geo::GeoConvexPolygon(geo) => geo.mirror_y().into(),
             Geo::GeoCubicBezier(geo) => geo.mirror_y().into(),
             Geo::GeoLogic(geo) => geo.mirror_y().into(),
         }
@@ -380,6 +393,11 @@ impl From<LineSegment> for Geo {
         Geo::GeoLineSegment(ls)
     }
 }
+impl From<ConvexPolygon> for Geo {
+    fn from(cp: ConvexPolygon) -> Self {
+        Geo::GeoConvexPolygon(cp)
+    }
+}
 impl From<CubicBezier> for Geo {
     fn from(cb: CubicBezier) -> Self {
         Geo::GeoCubicBezier(cb)
@@ -428,6 +446,7 @@ impl Intersect<LineSegment> for Geo {
             Geo::GeoRect(r) => r.intersect(line_segment).map(|oot| oot.into_vec()),
             Geo::GeoCircle(c) => c.intersect(line_segment).map(|oot| oot.into_vec()),
             Geo::GeoMCircle(mc) => mc.intersect(line_segment).map(|oot| oot.into_vec()),
+            Geo::GeoConvexPolygon(cp) => cp.intersect(line_segment).map(|oot| oot.map(|(p, _)| p).into_vec()),
             Geo::GeoCubicBezier(_) => None,
             Geo::GeoLogic(l) => l.intersect(line_segment),
         }
@@ -450,6 +469,7 @@ impl Intersect<Rect> for Geo {
             Geo::GeoRect(r) => r.intersect(rect),
             Geo::GeoCircle(c) => rect.intersect(c),
             Geo::GeoMCircle(mc) => mc.intersect(rect),
+            Geo::GeoConvexPolygon(cp) => cp.intersect(rect),
             Geo::GeoCubicBezier(_) => None,
             Geo::GeoLogic(l) => l.intersect(rect),
         }
@@ -474,6 +494,7 @@ impl Intersect<Circle> for Geo {
             Geo::GeoRect(r) => r.intersect(circle),
             Geo::GeoCircle(c) => circle.intersect(c).map(|oot| oot.into_vec()),
             Geo::GeoMCircle(mc) => mc.intersect(circle).map(|oot| oot.into_vec()),
+            Geo::GeoConvexPolygon(cp) => cp.intersect(circle),
             Geo::GeoCubicBezier(_) => None,
             Geo::GeoLogic(l) => l.intersect(circle),
         }
@@ -496,6 +517,7 @@ impl Intersect<MCircle> for Geo {
             Geo::GeoRect(r) => mcircle.intersect(r),
             Geo::GeoCircle(c) => mcircle.intersect(c).map(|oot| oot.into_vec()),
             Geo::GeoMCircle(mc) => mc.intersect(mcircle).map(|oot| oot.into_vec()),
+            Geo::GeoConvexPolygon(cp) => cp.intersect(mcircle),
             Geo::GeoCubicBezier(_) => None,
             Geo::GeoLogic(l) => l.intersect(mcircle),
         }
@@ -520,6 +542,7 @@ impl Intersect<Logic> for Geo {
             Geo::GeoRect(r) => logic.intersect(r),
             Geo::GeoCircle(c) => logic.intersect(c),
             Geo::GeoMCircle(mc) => logic.intersect(mc),
+            Geo::GeoConvexPolygon(cp) => cp.intersect(logic),
             Geo::GeoCubicBezier(_) => None,
             Geo::GeoLogic(l) => l.intersect(logic),
         }
@@ -544,6 +567,7 @@ impl Intersect<Geo> for Geo {
             Geo::GeoRect(r) => geo.intersect(r),
             Geo::GeoCircle(c) => geo.intersect(c),
             Geo::GeoMCircle(mc) => geo.intersect(mc),
+            Geo::GeoConvexPolygon(cp) => cp.intersect(geo),
             Geo::GeoCubicBezier(_) => None,
             Geo::GeoLogic(l) => geo.intersect(l),
         }
