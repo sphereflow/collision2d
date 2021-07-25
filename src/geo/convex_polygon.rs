@@ -173,10 +173,10 @@ impl ConvexPolygon {
 
     pub fn get_line_segments(&self) -> Vec<LineSegment> {
         let mut res = Vec::with_capacity(self.points.len());
-        for w in self.points.windows(2) {
+        for w in self.get_global_points().windows(2) {
             res.push(LineSegment::from_ab(
-                self.get_origin() + w[0],
-                self.get_origin() + w[1],
+                self.get_origin() + w[0].coords,
+                self.get_origin() + w[1].coords,
             ));
         }
         res
@@ -202,12 +202,9 @@ impl HasOrigin for ConvexPolygon {
 
 impl Contains for ConvexPolygon {
     fn contains(&self, p: &P2) -> bool {
-        for w in self.points.windows(2) {
-            if !is_clockwise_points(&w[0], &w[1], &p.coords) {
-                return false;
-            }
-        }
-        true
+        self.get_global_points()
+            .windows(2)
+            .all(|w| is_clockwise_points(&w[0].coords, &w[1].coords, &p.coords))
     }
 }
 

@@ -288,9 +288,10 @@ pub fn inverse(mat: &Matrix2<Float>) -> Option<Matrix2<Float>> {
 }
 
 pub fn is_clockwise_points(p1: &V2, p2: &V2, p3: &V2) -> bool {
-    let diff: V2 = p2 - p1;
-    let perpendicular = V2::new(-diff.y, diff.x);
-    (p3 - p2).dot(&perpendicular) < 0.
+    let v21: V2 = p1 - p2;
+    // counterclowkwise rotation of diff
+    let perpendicular = V2::new(-v21.y, v21.x);
+    (p3 - p2).dot(&perpendicular).is_sign_positive()
 }
 
 pub fn is_clockwise_directions(d1: &V2, d2: &V2) -> bool {
