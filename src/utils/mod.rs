@@ -295,6 +295,7 @@ pub fn is_clockwise_points(p1: &V2, p2: &V2, p3: &V2) -> bool {
 }
 
 pub fn is_clockwise_directions(d1: &V2, d2: &V2) -> bool {
+    // quarter turn counter clockwise
     let perpendicular = V2::new(-d1.y, d1.x);
     d2.dot(&perpendicular) < 0.
 }
