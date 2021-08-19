@@ -104,7 +104,7 @@ impl<T: Copy + Clone> Iterator for OneOrTwo<T> {
 }
 
 pub fn between(num: Float, a: Float, b: Float) -> bool {
-    (num >= a) && (num <= b)
+    (a..=b).contains(&num)
 }
 
 /// the smallest positive value is always in the first position
@@ -124,19 +124,19 @@ pub fn smallest_positive_sort(a: Float, b: Float) -> Option<(Float, Float)> {
 
 pub fn get_smallest_positive_by<F, T>(v: &mut Vec<T>, f: F) -> Option<T>
 where
-    F: Fn(&T) -> f64,
+    F: Fn(&T) -> Float,
     T: Copy,
 {
-    v.sort_unstable_by(|a, b| {
-        f(a).partial_cmp(&f(b))
-            .expect("get_smallest_positive: sort_unstable_by failed")
-    });
+    let mut min_eval = Float::MAX;
+    let mut res = None;
     for num in v {
-        if f(&num) >= 0. {
-            return Some(*num);
+        let eval = f(&num);
+        if eval >= 0. && eval < min_eval {
+            min_eval = eval;
+            res = Some(*num);
         }
     }
-    None
+    res
 }
 
 pub fn first<A, B>((a, _): (A, B)) -> A {
