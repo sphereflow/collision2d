@@ -476,6 +476,29 @@ impl Intersect<Rect> for Geo {
     }
 }
 
+impl Intersect<Aabb> for Geo {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, aabb: &Aabb) -> Option<Self::Intersection> {
+        match self {
+            Geo::GeoPoint(p) => {
+                if aabb.distance(p) < EPSILON {
+                    Some(vec![*p])
+                } else {
+                    None
+                }
+            }
+            Geo::GeoRay(r) => r.intersect(aabb).map(|oot| oot.map(|(p, _)| p).into_vec()),
+            Geo::GeoLineSegment(ls) => aabb.intersect(ls).map(|oot| oot.into_vec()),
+            Geo::GeoRect(r) => aabb.intersect(r),
+            Geo::GeoCircle(c) => aabb.intersect(c).map(|oot| oot.into_vec()),
+            Geo::GeoMCircle(mc) => mc.intersect(&aabb.to_rect()),
+            Geo::GeoConvexPolygon(cp) => cp.intersect(&aabb.to_rect()),
+            Geo::GeoCubicBezier(_) => None,
+            Geo::GeoLogic(l) => l.intersect(&aabb.to_rect()),
+        }
+    }
+}
+
 impl Intersect<Circle> for Geo {
     type Intersection = Vec<P2>;
     fn intersect(&self, circle: &Circle) -> Option<Self::Intersection> {

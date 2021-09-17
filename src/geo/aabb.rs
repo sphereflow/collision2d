@@ -161,6 +161,14 @@ impl HasOrigin for Aabb {
     }
 }
 
+impl HasDirection for Aabb {
+    fn get_direction(&self) -> U2 {
+        Unit::new_unchecked(V2::new(1.0, 0.0))
+    }
+    fn set_direction(&mut self, _direction: U2) {
+    }
+}
+
 impl Contains for Aabb {
     fn contains(&self, p: &P2) -> bool {
         let trans = p - self.origin;
