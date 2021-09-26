@@ -10,6 +10,14 @@ pub struct Aabb {
     pub height: Float,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+enum Configuration {
+    Lesser,
+    Greater,
+    Outer,
+    Inner,
+}
+
 impl Aabb {
     pub fn points(&self) -> RectPoints {
         let top_right = V2::new(self.width * 0.5, self.height * 0.5);
@@ -20,6 +28,31 @@ impl Aabb {
             self.origin - top_right,
             self.origin - bottom_right,
         ]
+    }
+
+    pub fn from_points(points: &[P2]) -> Self {
+        let mut t = points[0].y;
+        let mut b = points[0].y;
+        let mut r = points[0].x;
+        let mut l = points[0].x;
+        for point in points {
+            t = t.max(point.y);
+            b = b.min(point.y);
+            r = r.max(point.x);
+            l = l.min(point.y);
+        }
+        Aabb::from_tlbr(t, l, b, r)
+    }
+
+    pub fn get_tlbr(&self) -> (Float, Float, Float, Float) {
+        let wh = 0.5 * self.width;
+        let hh = 0.5 * self.height;
+        (
+            self.origin.y + hh,
+            self.origin.x - wh,
+            self.origin.y - hh,
+            self.origin.x + wh,
+        )
     }
 
     pub fn get_left(&self) -> Float {
@@ -90,6 +123,14 @@ impl Aabb {
         self.to_rect().seperated_by_line(l)
     }
 
+    pub fn merge(&self, other: &Aabb) -> Aabb {
+        let t = self.get_top().max(other.get_top());
+        let b = self.get_bottom().min(other.get_bottom());
+        let r = self.get_right().max(other.get_right());
+        let l = self.get_left().min(other.get_left());
+        Self::from_tlbr(t, l, b, r)
+    }
+
     pub fn from_tlbr(top: Float, left: Float, bottom: Float, right: Float) -> Aabb {
         let origin = P2::new((left + right) * 0.5, (bottom + top) * 0.5);
         Aabb {
@@ -98,6 +139,113 @@ impl Aabb {
             height: (top - bottom).abs(),
         }
     }
+
+    fn get_configuration(a1: Float, b1: Float, a2: Float, b2: Float) -> Configuration {
+        match (a1 < a2, b1 < b2) {
+            (false, false) => Configuration::Lesser,
+            (false, true) => Configuration::Inner,
+            (true, false) => Configuration::Outer,
+            _ => Configuration::Greater,
+        }
+    }
+
+    /// returns the "left" and "right" outlines of 2 Aabb's
+    ///           _+----------+                
+    ///         _/ |          |                
+    /// left  _/   |          |                
+    ///     _/     |          |                
+    ///   _/       |          |                
+    ///  /         +----------+                
+    /// +----------+         _/
+    /// |          |       _/  
+    /// |          |     _/ right
+    /// |          |   _/      
+    /// |          | _/        
+    /// +----------+/
+    /// returns None if the Aabb's have more than 2 intersection points
+    /// -> (left linesegment, right linesegment)
+    pub fn get_outlines(&self, other: &Aabb) -> Option<(LineSegment, LineSegment)> {
+        // get the 2 points farthest appart
+        let (t1, l1, b1, r1) = self.get_tlbr();
+        let (t2, l2, b2, r2) = other.get_tlbr();
+        let cfg1 = Aabb::get_configuration(l1, r1, l2, r2);
+        let cfg2 = Aabb::get_configuration(b1, t1, b2, t2);
+        // LineSegments in clockwise order starting at top left
+        let ls1 = LineSegment::from_ab(P2::new(l1, t1), P2::new(l2, t2));
+        let ls2 = LineSegment::from_ab(P2::new(r1, t1), P2::new(r2, t2));
+        let ls3 = LineSegment::from_ab(P2::new(r1, b1), P2::new(r2, b2));
+        let ls4 = LineSegment::from_ab(P2::new(l1, b1), P2::new(l2, b2));
+        match (cfg1, cfg2) {
+            (Configuration::Lesser, Configuration::Lesser) => Some((ls1, ls3)),
+            (Configuration::Lesser, Configuration::Inner) => Some((ls1, ls4)),
+            (Configuration::Lesser, Configuration::Outer) => Some((ls2, ls3)),
+            (Configuration::Lesser, Configuration::Greater) => Some((ls2, ls4)),
+            (Configuration::Inner, Configuration::Lesser) => Some((ls4, ls3)),
+            (Configuration::Inner, Configuration::Greater) => Some((ls2, ls1)),
+            (Configuration::Outer, Configuration::Greater) => Some((ls3, ls4)),
+            (Configuration::Outer, Configuration::Lesser) => Some((ls1, ls2)),
+            (Configuration::Greater, Configuration::Lesser) => Some((ls4, ls2)),
+            (Configuration::Greater, Configuration::Inner) => Some((ls3, ls2)),
+            (Configuration::Greater, Configuration::Outer) => Some((ls4, ls1)),
+            (Configuration::Greater, Configuration::Greater) => Some((ls3, ls1)),
+            _ => None,
+        }
+    }
+
+    pub fn get_outlines2(&self, other: &Aabb) -> Option<(LineSegment, LineSegment)> {
+        // get the 2 points farthest appart
+        let (t1, l1, b1, r1) = self.get_tlbr();
+        let (t2, l2, b2, r2) = other.get_tlbr();
+        // LineSegments in clockwise order starting at top left
+        let ls1 = LineSegment::from_ab(P2::new(l1, t1), P2::new(l2, t2));
+        let ls2 = LineSegment::from_ab(P2::new(r1, t1), P2::new(r2, t2));
+        let ls3 = LineSegment::from_ab(P2::new(r1, b1), P2::new(r2, b2));
+        let ls4 = LineSegment::from_ab(P2::new(l1, b1), P2::new(l2, b2));
+        let d1 = ls1.get_direction();
+        let d2 = ls2.get_direction();
+        let d3 = ls3.get_direction();
+        let d4 = ls4.get_direction();
+        let mut lefto = None;
+        let mut righto = None;
+        if d1.x >= 0.0 && d1.y >= 0.0 {
+            lefto = Some(ls1);
+        } else if d1.x <= 0.0 && d1.y <= 0.0 {
+            righto = Some(ls1);
+        }
+        if d2.x >= 0.0 && d2.y <= 0.0 {
+            lefto = Some(ls2);
+        } else if d2.x <= 0.0 && d2.y >= 0.0 {
+            righto = Some(ls2);
+        }
+        if d3.x <= 0.0 && d3.y <= 0.0 {
+            if lefto.is_some() {
+                return None;
+            }
+            lefto = Some(ls3);
+        } else if d3.x >= 0.0 && d3.y >= 0.0 {
+            if righto.is_some() {
+                return None;
+            }
+            righto = Some(ls3);
+        }
+        if d4.x <= 0.0 && d4.y >= 0.0 {
+            if lefto.is_some() {
+                return None;
+            }
+            lefto = Some(ls4);
+        } else if d4.x >= 0.0 && d4.y <= 0.0 {
+            if righto.is_some() {
+                return None;
+            }
+            righto = Some(ls4);
+        }
+        if let (Some(left), Some(right)) = (lefto, righto) {
+            Some((left, right))
+        } else {
+            None
+        }
+    }
+
 }
 
 impl Intersect<LineSegment> for Aabb {
@@ -138,16 +286,69 @@ impl Intersect<Rect> for Aabb {
 }
 
 impl Intersect<Aabb> for Aabb {
-    type Intersection = ();
+    /// there are up to 4 intersection points
+    type Intersection = Vec<P2>;
 
-    fn intersect(&self, other: &Aabb) -> Option<()> {
-        let p = self.origin - other.origin;
-        let w2 = self.width * 0.5 + other.width * 0.5;
-        let h2 = self.height * 0.5 + other.height * 0.5;
-        if Float::abs(p.x) < w2 && Float::abs(p.y) < h2 {
-            Some(())
-        } else {
+    fn intersect(&self, other: &Aabb) -> Option<Self::Intersection> {
+        let (t1, l1, b1, r1) = self.get_tlbr();
+        let (t2, l2, b2, r2) = other.get_tlbr();
+        if b1 > t2 || b2 > t1 || l1 > r2 || l2 > r1 {
             None
+        } else {
+            let cfg1 = Aabb::get_configuration(l1, r1, l2, r2);
+            let cfg2 = Aabb::get_configuration(b1, t1, b2, t2);
+            match (cfg1, cfg2) {
+                (Configuration::Lesser, Configuration::Lesser) => {
+                    Some(vec![P2::new(l2, t1), P2::new(r1, b2)])
+                }
+                (Configuration::Lesser, Configuration::Inner) => {
+                    Some(vec![P2::new(l2, t1), P2::new(l2, b1)])
+                }
+                (Configuration::Lesser, Configuration::Outer) => {
+                    Some(vec![P2::new(r1, t2), P2::new(r1, b2)])
+                }
+                (Configuration::Lesser, Configuration::Greater) => {
+                    Some(vec![P2::new(r1, t2), P2::new(l2, b1)])
+                }
+                (Configuration::Inner, Configuration::Lesser) => {
+                    Some(vec![P2::new(l1, b2), P2::new(r1, b2)])
+                }
+                (Configuration::Inner, Configuration::Inner)
+                | (Configuration::Outer, Configuration::Outer) => None,
+                (Configuration::Inner, Configuration::Outer) => Some(vec![
+                    P2::new(l1, t2),
+                    P2::new(r1, t2),
+                    P2::new(l1, b2),
+                    P2::new(r1, b2),
+                ]),
+                (Configuration::Inner, Configuration::Greater) => {
+                    Some(vec![P2::new(l1, t2), P2::new(r1, t2)])
+                }
+                (Configuration::Outer, Configuration::Lesser) => {
+                    Some(vec![P2::new(l2, t1), P2::new(r2, t1)])
+                }
+                (Configuration::Outer, Configuration::Inner) => Some(vec![
+                    P2::new(l2, t1),
+                    P2::new(r2, t1),
+                    P2::new(l2, b1),
+                    P2::new(r2, b1),
+                ]),
+                (Configuration::Outer, Configuration::Greater) => {
+                    Some(vec![P2::new(l2, b1), P2::new(r2, b1)])
+                }
+                (Configuration::Greater, Configuration::Lesser) => {
+                    Some(vec![P2::new(l1, b2), P2::new(r2, t1)])
+                }
+                (Configuration::Greater, Configuration::Inner) => {
+                    Some(vec![P2::new(r2, t1), P2::new(r2, b1)])
+                }
+                (Configuration::Greater, Configuration::Outer) => {
+                    Some(vec![P2::new(l1, t2), P2::new(l1, b2)])
+                }
+                (Configuration::Greater, Configuration::Greater) => {
+                    Some(vec![P2::new(l1, t2), P2::new(r2, b1)])
+                }
+            }
         }
     }
 }
@@ -165,8 +366,7 @@ impl HasDirection for Aabb {
     fn get_direction(&self) -> U2 {
         Unit::new_unchecked(V2::new(1.0, 0.0))
     }
-    fn set_direction(&mut self, _direction: U2) {
-    }
+    fn set_direction(&mut self, _direction: U2) {}
 }
 
 impl Contains for Aabb {
@@ -218,6 +418,12 @@ impl Distribution<Aabb> for Standard {
             width: rng.gen(),
             height: rng.gen(),
         }
+    }
+}
+
+impl HasAabb for Aabb {
+    fn get_aabb(&self) -> Aabb {
+        *self
     }
 }
 
