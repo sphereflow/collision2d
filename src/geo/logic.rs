@@ -38,6 +38,27 @@ impl Logic {
     }
 }
 
+impl HasAabb for Logic {
+    fn get_aabb(&self) -> Aabb {
+        match self.op {
+            LogicOp::And => {
+                let a = self.get_a();
+                if let Some(oot) = a.get_aabb().intersect(&self.get_b().get_aabb()) {
+                    Aabb::from_points(&oot.to_vec())
+                } else {
+                    Aabb {
+                        origin: a.get_origin(),
+                        width: 0.0,
+                        height: 0.0,
+                    }
+                }
+            }
+            LogicOp::Or => self.get_a().get_aabb().merge(&self.get_b().get_aabb()),
+            LogicOp::AndNot => self.get_a().get_aabb(),
+        }
+    }
+}
+
 impl HasOrigin for Logic {
     fn get_origin(&self) -> P2 {
         self.origin

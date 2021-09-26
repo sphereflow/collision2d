@@ -156,21 +156,6 @@ impl ConvexPolygon {
         self.points = hull_points;
     }
 
-    pub fn calc_aabb(points: &[P2]) -> Aabb {
-        // calculate the bounding box
-        let mut min_x = Float::MAX;
-        let mut min_y = Float::MAX;
-        let mut max_x = Float::MIN;
-        let mut max_y = Float::MIN;
-        for p in points {
-            min_x = min_x.min(p.x);
-            max_x = max_x.max(p.x);
-            min_y = min_y.min(p.y);
-            max_y = max_y.max(p.y);
-        }
-        Aabb::from_tlbr(max_y, min_x, min_y, max_x)
-    }
-
     pub fn get_line_segments(&self) -> Vec<LineSegment> {
         let mut res = Vec::with_capacity(self.points.len());
         for w in self.get_global_points().windows(2) {
@@ -197,6 +182,12 @@ impl HasOrigin for ConvexPolygon {
     }
     fn set_origin(&mut self, origin: P2) {
         self.origin = origin;
+    }
+}
+
+impl HasAabb for ConvexPolygon {
+    fn get_aabb(&self) -> Aabb {
+        self.aabb
     }
 }
 
@@ -285,7 +276,7 @@ impl Mirror for ConvexPolygon {
             origin: self.origin,
             rotation: Rot2::identity(),
             points,
-            aabb: ConvexPolygon::calc_aabb(&global_points),
+            aabb: Aabb::from_points(&global_points),
         }
     }
 
@@ -302,7 +293,7 @@ impl Mirror for ConvexPolygon {
             origin: self.origin,
             rotation: Rot2::identity(),
             points,
-            aabb: ConvexPolygon::calc_aabb(&global_points),
+            aabb: Aabb::from_points(&global_points),
         }
     }
 }

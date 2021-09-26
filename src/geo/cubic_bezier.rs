@@ -73,6 +73,12 @@ impl HasDirection for CubicBezier {
     }
 }
 
+impl HasAabb for CubicBezier {
+    fn get_aabb(&self) -> Aabb {
+        Aabb::from_points(&self.points)
+    }
+}
+
 impl Scale for CubicBezier {
     fn scale(&mut self, scale_x: Float, scale_y: Float) {
         let o = self.get_origin();

@@ -200,6 +200,22 @@ impl HasOrigin for Geo {
     }
 }
 
+impl HasAabb for Geo {
+    fn get_aabb(&self) -> Aabb {
+        match self {
+            Geo::GeoRect(rect) => rect.get_aabb(),
+            Geo::GeoCircle(circle) => circle.get_aabb(),
+            Geo::GeoRay(ray) => ray.get_aabb(),
+            Geo::GeoLineSegment(ls) => ls.get_aabb(),
+            Geo::GeoPoint(p) => p.get_aabb(),
+            Geo::GeoMCircle(mc) => mc.get_aabb(),
+            Geo::GeoConvexPolygon(cp) => cp.get_aabb(),
+            Geo::GeoCubicBezier(cb) => cb.get_aabb(),
+            Geo::GeoLogic(l) => l.get_aabb(),
+        }
+    }
+}
+
 impl Contains for Geo {
     fn contains(&self, p: &P2) -> bool {
         match self {
@@ -446,7 +462,9 @@ impl Intersect<LineSegment> for Geo {
             Geo::GeoRect(r) => r.intersect(line_segment).map(|oot| oot.into_vec()),
             Geo::GeoCircle(c) => c.intersect(line_segment).map(|oot| oot.into_vec()),
             Geo::GeoMCircle(mc) => mc.intersect(line_segment).map(|oot| oot.into_vec()),
-            Geo::GeoConvexPolygon(cp) => cp.intersect(line_segment).map(|oot| oot.map(|(p, _)| p).into_vec()),
+            Geo::GeoConvexPolygon(cp) => cp
+                .intersect(line_segment)
+                .map(|oot| oot.map(|(p, _)| p).into_vec()),
             Geo::GeoCubicBezier(_) => None,
             Geo::GeoLogic(l) => l.intersect(line_segment),
         }

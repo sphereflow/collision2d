@@ -555,6 +555,14 @@ impl HasOrigin for MCircle {
     }
 }
 
+impl HasAabb for MCircle {
+    fn get_aabb(&self) -> Aabb {
+        let aabba = self.circle_a().get_aabb();
+        let aabbb = self.circle_b().get_aabb();
+        aabba.merge(&aabbb)
+    }
+}
+
 impl Contains for MCircle {
     fn contains(&self, p: &P2) -> bool {
         self.path.distance(p) < self.radius

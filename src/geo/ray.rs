@@ -136,6 +136,16 @@ impl Ray {
     }
 }
 
+impl From<LineSegment> for Ray {
+    fn from(ls: LineSegment) -> Self {
+        Ray {
+            origin: ls.get_origin(),
+            normal: ls.get_normal(),
+            direction: ls.get_direction(),
+        }
+    }
+}
+
 impl<T> ReflectOn<T> for Ray
 where
     Ray: Intersect<T, Intersection = Reflection>,
@@ -514,6 +524,16 @@ impl Distribution<Ray> for Standard {
 impl HasGeometry for Ray {
     fn get_geometry(&self) -> Geo {
         Geo::GeoRay(*self)
+    }
+}
+
+impl HasAabb for Ray {
+    fn get_aabb(&self) -> Aabb {
+        Aabb {
+            origin: self.origin,
+            width: 0.0,
+            height: 0.0,
+        }
     }
 }
 

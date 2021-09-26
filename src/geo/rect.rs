@@ -294,6 +294,12 @@ impl Distribution<Rect> for Standard {
     }
 }
 
+impl HasAabb for Rect {
+    fn get_aabb(&self) -> Aabb {
+        Aabb::from_points(&self.points())
+    }
+}
+
 impl ReflectOn<Line> for Rect {}
 impl ReflectOn<Ray> for Rect {}
 impl ReflectOn<LineSegment> for Rect {}

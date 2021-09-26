@@ -186,6 +186,16 @@ impl HasGeometry for Circle {
     }
 }
 
+impl HasAabb for Circle {
+    fn get_aabb(&self) -> Aabb {
+        Aabb {
+            origin: self.origin,
+            width: self.radius,
+            height: self.radius,
+        }
+    }
+}
+
 // a circle can not be reflected on anything
 impl ReflectOn<Line> for Circle {}
 impl ReflectOn<Ray> for Circle {}

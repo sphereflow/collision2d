@@ -103,6 +103,12 @@ impl HasNormal for LineSegment {
     }
 }
 
+impl HasAabb for LineSegment {
+    fn get_aabb(&self) -> Aabb {
+        Aabb::from_points(&[self.a, self.b])
+    }
+}
+
 impl Scale for LineSegment {
     /// scales while a stays fixed
     fn scale(&mut self, scale_x: Float, scale_y: Float) {

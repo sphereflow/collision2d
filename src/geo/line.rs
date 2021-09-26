@@ -63,6 +63,16 @@ impl HasNormal for Line {
     }
 }
 
+impl HasAabb for Line {
+    fn get_aabb(&self) -> Aabb {
+        Aabb {
+            origin: self.origin,
+            width: 0.0,
+            height: 0.0,
+        }
+    }
+}
+
 impl Scale for Line {
     fn scale(&mut self, _scale_x: Float, _scale_y: Float) {}
     fn scale_position(&mut self, scale_x: Float, scale_y: Float) {

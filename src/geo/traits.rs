@@ -200,3 +200,17 @@ where
 pub trait HasGeometry {
     fn get_geometry(&self) -> Geo;
 }
+
+pub trait HasAabb {
+    fn get_aabb(&self) -> Aabb;
+}
+
+impl HasAabb for P2 {
+    fn get_aabb(&self) -> Aabb {
+        Aabb {
+            origin: *self,
+            width: 0.0,
+            height: 0.0,
+        }
+    }
+}
