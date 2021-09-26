@@ -207,33 +207,33 @@ impl Aabb {
         let d4 = ls4.get_direction();
         let mut lefto = None;
         let mut righto = None;
-        if d1.x >= 0.0 && d1.y >= 0.0 {
+        if d1.x > 0.0 && d1.y >= 0.0 {
             lefto = Some(ls1);
-        } else if d1.x <= 0.0 && d1.y <= 0.0 {
+        } else if d1.x <= 0.0 && d1.y < 0.0 {
             righto = Some(ls1);
         }
-        if d2.x >= 0.0 && d2.y <= 0.0 {
+        if d2.x >= 0.0 && d2.y < 0.0 {
             lefto = Some(ls2);
-        } else if d2.x <= 0.0 && d2.y >= 0.0 {
+        } else if d2.x < 0.0 && d2.y >= 0.0 {
             righto = Some(ls2);
         }
-        if d3.x <= 0.0 && d3.y <= 0.0 {
+        if d3.x < 0.0 && d3.y <= 0.0 {
             if lefto.is_some() {
                 return None;
             }
             lefto = Some(ls3);
-        } else if d3.x >= 0.0 && d3.y >= 0.0 {
+        } else if d3.x >= 0.0 && d3.y > 0.0 {
             if righto.is_some() {
                 return None;
             }
             righto = Some(ls3);
         }
-        if d4.x <= 0.0 && d4.y >= 0.0 {
+        if d4.x <= 0.0 && d4.y > 0.0 {
             if lefto.is_some() {
                 return None;
             }
             lefto = Some(ls4);
-        } else if d4.x >= 0.0 && d4.y <= 0.0 {
+        } else if d4.x > 0.0 && d4.y <= 0.0 {
             if righto.is_some() {
                 return None;
             }
