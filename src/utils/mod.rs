@@ -107,7 +107,8 @@ pub fn between(num: Float, a: Float, b: Float) -> bool {
     (a..=b).contains(&num)
 }
 
-/// the smallest positive value is always in the first position
+/// The smallest positive value is always in the first position.
+/// Returns None if both values are negative
 pub fn smallest_positive_sort(a: Float, b: Float) -> Option<(Float, Float)> {
     if a >= 0. {
         if b > a || b < 0. {
