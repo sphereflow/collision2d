@@ -39,7 +39,7 @@ impl Aabb {
             t = t.max(point.y);
             b = b.min(point.y);
             r = r.max(point.x);
-            l = l.min(point.y);
+            l = l.min(point.x);
         }
         Aabb::from_tlbr(t, l, b, r)
     }

@@ -190,8 +190,8 @@ impl HasAabb for Circle {
     fn get_aabb(&self) -> Aabb {
         Aabb {
             origin: self.origin,
-            width: self.radius,
-            height: self.radius,
+            width: self.radius * 2.,
+            height: self.radius * 2.,
         }
     }
 }
