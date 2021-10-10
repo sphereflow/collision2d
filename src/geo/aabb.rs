@@ -131,6 +131,24 @@ impl Aabb {
         Self::from_tlbr(t, l, b, r)
     }
 
+    pub fn intersection(&self, other: &Aabb) -> Aabb {
+        let (t1, l1, b1, r1) = self.get_tlbr();
+        let (t2, l2, b2, r2) = other.get_tlbr();
+        if b1 > t2 || b2 > t1 || l1 > r2 || l2 > r1 {
+            Aabb {
+                origin: 0.5 * (self.origin + other.get_origin().coords),
+                width: 0.,
+                height: 0.,
+            }
+        } else {
+            let t = self.get_top().min(other.get_top());
+            let b = self.get_bottom().max(other.get_bottom());
+            let r = self.get_right().min(other.get_right());
+            let l = self.get_left().max(other.get_left());
+            Self::from_tlbr(t, l, b, r)
+        }
+    }
+
     pub fn from_tlbr(top: Float, left: Float, bottom: Float, right: Float) -> Aabb {
         let origin = P2::new((left + right) * 0.5, (bottom + top) * 0.5);
         Aabb {
@@ -245,7 +263,6 @@ impl Aabb {
             None
         }
     }
-
 }
 
 impl Intersect<LineSegment> for Aabb {
