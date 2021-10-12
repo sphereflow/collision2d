@@ -263,6 +263,34 @@ impl Aabb {
             None
         }
     }
+
+    pub fn get_crossover(&self, other: &Aabb) -> Option<(LineSegment, LineSegment)> {
+        // get the 2 points farthest appart
+        let (t1, l1, b1, r1) = self.get_tlbr();
+        let (t2, l2, b2, r2) = other.get_tlbr();
+        let cfg1 = Aabb::get_configuration(l1, r1, l2, r2);
+        let cfg2 = Aabb::get_configuration(b1, t1, b2, t2);
+        // LineSegments in clockwise order starting at top left
+        let ls1 = LineSegment::from_ab(P2::new(l1, t1), P2::new(r2, b2));
+        let ls2 = LineSegment::from_ab(P2::new(r1, t1), P2::new(l2, b2));
+        let ls3 = LineSegment::from_ab(P2::new(r1, b1), P2::new(l2, t2));
+        let ls4 = LineSegment::from_ab(P2::new(l1, b1), P2::new(r2, t2));
+        match (cfg1, cfg2) {
+            (Configuration::Lesser, Configuration::Lesser) => Some((ls1, ls3)),
+            (Configuration::Lesser, Configuration::Inner) => Some((ls1, ls4)),
+            (Configuration::Lesser, Configuration::Outer) => Some((ls2, ls3)),
+            (Configuration::Lesser, Configuration::Greater) => Some((ls2, ls4)),
+            (Configuration::Inner, Configuration::Lesser) => Some((ls4, ls3)),
+            (Configuration::Inner, Configuration::Greater) => Some((ls2, ls1)),
+            (Configuration::Outer, Configuration::Greater) => Some((ls3, ls4)),
+            (Configuration::Outer, Configuration::Lesser) => Some((ls1, ls2)),
+            (Configuration::Greater, Configuration::Lesser) => Some((ls4, ls2)),
+            (Configuration::Greater, Configuration::Inner) => Some((ls3, ls2)),
+            (Configuration::Greater, Configuration::Outer) => Some((ls4, ls1)),
+            (Configuration::Greater, Configuration::Greater) => Some((ls3, ls1)),
+            _ => None,
+        }
+    }
 }
 
 impl Intersect<LineSegment> for Aabb {
