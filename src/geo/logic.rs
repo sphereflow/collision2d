@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Logic {
     pub op: LogicOp,
     pub a: Box<Geo>,
@@ -9,7 +9,7 @@ pub struct Logic {
     pub rotation: Rot2,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum LogicOp {
     And,
     Or,

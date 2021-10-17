@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct ConvexPolygon {
     origin: P2,
     /// Rotation matrix

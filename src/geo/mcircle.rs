@@ -38,7 +38,7 @@ fn to_local(min_r: Float, val: Float) -> Float {
 }
 
 /// moving circle
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct MCircle {
     pub radius: Float,
     pub path: LineSegment,

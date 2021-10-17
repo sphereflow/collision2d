@@ -2,7 +2,7 @@ extern crate nalgebra as na;
 
 use super::*;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Rect {
     pub origin: P2,
     pub rotation: Rot2,

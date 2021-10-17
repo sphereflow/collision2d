@@ -2,7 +2,7 @@ extern crate nalgebra as na;
 
 use super::*;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Ray {
     origin: P2,
     normal: Normal,

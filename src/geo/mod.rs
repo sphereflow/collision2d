@@ -28,8 +28,9 @@ pub use ray::*;
 pub use rect::*;
 use std::ops::{BitAnd, BitOr};
 pub use traits::*;
+use serde::*;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Geo {
     GeoRect(Rect),
     GeoCircle(Circle),

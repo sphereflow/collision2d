@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct CubicBezier {
     pub points: [P2; 4],
 }
