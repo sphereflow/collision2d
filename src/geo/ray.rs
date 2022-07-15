@@ -58,31 +58,34 @@ impl Ray {
         incoming_refractive_index: Float,
         outgoing_refractive_index: Float,
     ) -> (Self, Option<Self>, Float) {
-        let n1 = incoming_refractive_index;
-        let n2 = outgoing_refractive_index;
-        let n = incoming_refractive_index / outgoing_refractive_index;
+        let incident = self.direction.into_inner();
+        let reflected = self.reflect(intersection, normal);
+        let mut tangent = V2::new(-normal.y, normal.x);
+        if incident.dot(&tangent) < 0. {
+            tangent = -tangent;
+        }
+        let mut normal = normal.into_inner();
+        if incident.dot(&normal) < 0. {
+            //negate it
+            normal = -normal;
+        }
+        let sin_beta =
+            tangent.dot(&incident) * (incoming_refractive_index / outgoing_refractive_index);
         let cos_i = normal.dot(&self.direction).abs();
-        let sin_t2 = n * n * (1.0 - cos_i * cos_i);
         let mut transmitted: Option<Ray> = None;
         let mut reflectance = 1.;
-        if sin_t2 <= 1. {
-            let cos_t = Float::sqrt(1.0 - sin_t2);
+        if sin_beta <= 1. {
+            let cos_beta = (1.0 - sin_beta * sin_beta).sqrt();
             transmitted = Some(
-                Ray::from_origin(
-                    *intersection,
-                    n * self.direction.into_inner() + (n * cos_i - cos_t) * normal.into_inner(),
-                )
-                .offset(),
+                Ray::from_origin(*intersection, sin_beta * tangent + cos_beta * normal).offset(),
             );
-            let r_orth = (n1 * cos_i - n2 * cos_t) / (n1 * cos_i + n2 * cos_t);
-            let r_par = (n2 * cos_i - n1 * cos_t) / (n2 * cos_i + n1 * cos_t);
+            let n1 = incoming_refractive_index;
+            let n2 = outgoing_refractive_index;
+            let r_orth = (n1 * cos_i - n2 * cos_beta) / (n1 * cos_i + n2 * cos_beta);
+            let r_par = (n2 * cos_i - n1 * cos_beta) / (n2 * cos_i + n1 * cos_beta);
             reflectance = (r_orth * r_orth + r_par * r_par) * 0.5;
         }
-        (
-            self.reflect(&intersection, &normal),
-            transmitted,
-            reflectance,
-        )
+        (reflected, transmitted, reflectance)
     }
 
     pub fn refract_on<T>(
