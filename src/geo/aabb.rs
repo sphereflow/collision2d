@@ -19,6 +19,8 @@ enum Configuration {
 }
 
 impl Aabb {
+    /// Returns the four corners of the AABB in clockwise direction
+    /// starting from the top right
     pub fn points(&self) -> RectPoints {
         let top_right = V2::new(self.width * 0.5, self.height * 0.5);
         let bottom_right = V2::new(self.width * 0.5, -self.height * 0.5);
