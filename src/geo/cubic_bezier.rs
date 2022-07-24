@@ -196,3 +196,28 @@ impl Intersect<Line> for CubicBezier {
             .map(|(r, t)| (line.eval_at_r(r), self.normal_at_t(t)))
     }
 }
+
+impl Intersect<Rect> for CubicBezier {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, other: &Rect) -> Option<Self::Intersection> {
+        let mut res = Vec::new();
+        for ls in other.line_segments() {
+            if let Some(intersections) = self.intersect(&ls) {
+                for (point, _normal) in intersections {
+                    res.push(point);
+                }
+            }
+        }
+        if res.is_empty() {
+            return None;
+        }
+        Some(res)
+    }
+}
+
+impl Intersect<Aabb> for CubicBezier {
+    type Intersection = Vec<P2>;
+    fn intersect(&self, other: &Aabb) -> Option<Self::Intersection> {
+        self.intersect(&other.to_rect())
+    }
+}
