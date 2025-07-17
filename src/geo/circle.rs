@@ -167,7 +167,7 @@ impl Mirror for Circle {
 
 impl Distance for Circle {
     fn distance(&self, p: &P2) -> Float {
-        distance(&self.origin, &p) - self.radius
+        distance(&self.origin, p) - self.radius
     }
 }
 

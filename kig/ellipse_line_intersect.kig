@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE KigDocument>
+<KigDocument axes="1" Version="24.12.3" CompatibilityVersion="0.7.0" grid="1">
+ <CoordinateSystem>Euclidean</CoordinateSystem>
+ <Hierarchy>
+  <Data id="1" type="point">
+   <x>3.88039</x>
+   <y>5.16166</y>
+  </Data>
+  <Data id="2" type="string">a</Data>
+  <Data id="3" type="double">0.459445</Data>
+  <Data id="4" type="double">0</Data>
+  <Data id="5" type="double">0</Data>
+  <Data id="6" type="double">0.609476</Data>
+  <Data id="7" type="int">0</Data>
+  <Data id="8" type="string">e2</Data>
+  <Data id="9" type="double">0</Data>
+  <Data id="10" type="string">b</Data>
+  <Data id="11" type="double">0.734118</Data>
+  <Data id="12" type="string">given: 
+line equation e₁₂ = pl + f * d ; a ; b
+
+e₁₂ = pl + f * d = (a * cos(α))
+                               (b * sin(α))
+
+plx + f * dx = a * cos(α)
+ply + f * dy = b * sin(α)
+
+sin²(α) = 1 - cos²(α)
+
+=> ((ply + f * dy) / a)² = 1 - cos²(α) = 1 - ((plx + f * dx) / b)²
+
+&lt;=> ((ply + f * dy / a)² + ((plx + f * dx) / b)² - 1 = 0
+
+&lt;=> ((ply² + 2 * f * dy * ply + f² * dy²) / a² + ((plx² + 2 * f * dx * plx + f² * dx²) / b² - 1 = 0
+
+&lt;=> ply² * b² + 2 * f * dy * ply * b² + f² * dy² * b² + plx² * a² + 2 * f * dx *plx * a² + f² * dx² * a² - a² * b² = 0
+
+&lt;=> f² * (dx² * a² + dy² * b²) + f * 2 * (dx * plx * a² +  dy * ply * b²) + plx² * a² + ply² * b² - a² * b² = 0
+
+let div = dx² * a² + dy² * b²
+
+&lt;=> f² + f * 2 * (dx * plx * a² + dy * ply  * b²) / div + (plx² * a² + ply² * b² - a² * b²) / div  = 0
+
+solving the quadratic equation with:
+
+p / 2 = (dx * plx * a² + dy * ply * b²) / div
+
+q = (plx² * a² + ply² * b² - a² * b²) / div
+
+------------------------------------------------------------------------
+
+tangent:
+
+to form a tangent we can set ply = 0 and solve for plx.
+
+since we have only one intersection the square root term in the quadratic equation mustbe 0 and we have:
+
+p² / 4 - q = 0
+
+&lt;=> (dx * plx * a² + dy * ply * b²)² / (4 * div²) - (plx² * a² + ply² * b² - a² * b²) / div = 0
+
+&lt;=> (dx * plx * a² + dy * ply * b²)² /  (4 * div)  = plx² * a² + ply² * b² - a² * b²
+ply = 0
+&lt;=> (dx * plx * a²)² / (4 * div) = plx² * a² - a² * b²
+
+&lt;=> dx² * plx² * (a²)² - plx² * a² * 4 * div = (-a² * b²) * 4 * div
+
+&lt;=> plx² (dx² * (a²)² - a² *  4 * div) = (-a² * b²) * 4 * div
+
+&lt;=> plx² = (-a² * b² * 4 * div) / (dx² * (a²)² - a² * 4 * div)
+
+&lt;=> plx² = (-b² * 4 * div) / (dx² * a² - 4 * div)</Data>
+  <Data id="13" type="string">e1</Data>
+  <Data id="14" type="string">d</Data>
+  <Data id="15" type="int">0</Data>
+  <Data id="16" type="double">0</Data>
+  <Data id="17" type="double">-2</Data>
+  <Data id="18" type="int">0</Data>
+  <Data id="19" type="int">0</Data>
+  <Data id="20" type="double">0</Data>
+  <Data id="21" type="int">0</Data>
+  <Data id="22" type="double">0.605006</Data>
+  <Data id="23" type="double">0</Data>
+  <Data id="24" type="double">0</Data>
+  <Data id="25" type="double">0</Data>
+  <Data id="26" type="int">0</Data>
+  <Object id="27" type="Label">
+   <Parent id="18"/>
+   <Parent id="1"/>
+   <Parent id="12"/>
+  </Object>
+  <Data id="28" type="double">0.510294</Data>
+  <Data id="29" type="double">0.507921</Data>
+  <Data id="30" type="double">0</Data>
+  <Data id="31" type="double">2.97118</Data>
+  <Data id="32" type="double">-2</Data>
+  <Data id="33" type="double">0</Data>
+  <Data id="34" type="double">2</Data>
+  <Data id="35" type="double">0</Data>
+  <Object id="36" type="FixedPoint">
+   <Parent id="34"/>
+   <Parent id="35"/>
+  </Object>
+  <Data id="37" type="double">0</Data>
+  <Data id="38" type="int">-1</Data>
+  <Data id="39" type="double">0</Data>
+  <Data id="40" type="string">pl</Data>
+  <Data id="41" type="int">1</Data>
+  <Object id="42" type="FixedPoint">
+   <Parent id="17"/>
+   <Parent id="33"/>
+  </Object>
+  <Object id="43" type="SegmentAB">
+   <Parent id="36"/>
+   <Parent id="42"/>
+  </Object>
+  <Property id="44" which="mid-point">
+   <Parent id="43"/>
+  </Property>
+  <Data id="45" type="double">3.78871</Data>
+  <Data id="46" type="double">0.173908</Data>
+  <Object id="47" type="FixedPoint">
+   <Parent id="45"/>
+   <Parent id="46"/>
+  </Object>
+  <Object id="48" type="Vector">
+   <Parent id="44"/>
+   <Parent id="47"/>
+  </Object>
+  <Object id="49" type="ConstrainedRelativePoint">
+   <Parent id="4"/>
+   <Parent id="25"/>
+   <Parent id="6"/>
+   <Parent id="48"/>
+  </Object>
+  <Data id="50" type="double">0</Data>
+  <Data id="51" type="double">0</Data>
+  <Data id="52" type="double">0</Data>
+  <Object id="53" type="FixedPoint">
+   <Parent id="52"/>
+   <Parent id="32"/>
+  </Object>
+  <Object id="54" type="EllipseBFFP">
+   <Parent id="42"/>
+   <Parent id="36"/>
+   <Parent id="53"/>
+  </Object>
+  <Object id="55" type="ConstrainedPoint">
+   <Parent id="50"/>
+   <Parent id="54"/>
+  </Object>
+  <Object id="56" type="SegmentAB">
+   <Parent id="44"/>
+   <Parent id="55"/>
+  </Object>
+  <Object id="57" type="ConstrainedRelativePoint">
+   <Parent id="39"/>
+   <Parent id="37"/>
+   <Parent id="3"/>
+   <Parent id="56"/>
+  </Object>
+  <Object id="58" type="Label">
+   <Parent id="26"/>
+   <Parent id="57"/>
+   <Parent id="2"/>
+  </Object>
+  <Data id="59" type="int">0</Data>
+  <Object id="60" type="Label">
+   <Parent id="59"/>
+   <Parent id="49"/>
+   <Parent id="40"/>
+  </Object>
+  <Data id="61" type="double">0.637582</Data>
+  <Object id="62" type="FixedPoint">
+   <Parent id="31"/>
+   <Parent id="61"/>
+  </Object>
+  <Object id="63" type="Vector">
+   <Parent id="47"/>
+   <Parent id="62"/>
+  </Object>
+  <Object id="64" type="ConstrainedRelativePoint">
+   <Parent id="30"/>
+   <Parent id="9"/>
+   <Parent id="11"/>
+   <Parent id="63"/>
+  </Object>
+  <Object id="65" type="Label">
+   <Parent id="7"/>
+   <Parent id="64"/>
+   <Parent id="14"/>
+  </Object>
+  <Data id="66" type="double">0.125</Data>
+  <Object id="67" type="ConstrainedPoint">
+   <Parent id="66"/>
+   <Parent id="54"/>
+  </Object>
+  <Object id="68" type="SegmentAB">
+   <Parent id="44"/>
+   <Parent id="67"/>
+  </Object>
+  <Object id="69" type="ConstrainedRelativePoint">
+   <Parent id="20"/>
+   <Parent id="24"/>
+   <Parent id="29"/>
+   <Parent id="68"/>
+  </Object>
+  <Object id="70" type="Label">
+   <Parent id="21"/>
+   <Parent id="69"/>
+   <Parent id="10"/>
+  </Object>
+  <Object id="71" type="HalflineByVector">
+   <Parent id="63"/>
+   <Parent id="47"/>
+  </Object>
+  <Object id="72" type="ConicLineIntersection">
+   <Parent id="54"/>
+   <Parent id="71"/>
+   <Parent id="41"/>
+  </Object>
+  <Object id="73" type="Vector">
+   <Parent id="44"/>
+   <Parent id="72"/>
+  </Object>
+  <Object id="74" type="ConstrainedRelativePoint">
+   <Parent id="16"/>
+   <Parent id="51"/>
+   <Parent id="28"/>
+   <Parent id="73"/>
+  </Object>
+  <Object id="75" type="Label">
+   <Parent id="15"/>
+   <Parent id="74"/>
+   <Parent id="8"/>
+  </Object>
+  <Object id="76" type="ConicLineIntersection">
+   <Parent id="54"/>
+   <Parent id="71"/>
+   <Parent id="38"/>
+  </Object>
+  <Object id="77" type="Vector">
+   <Parent id="44"/>
+   <Parent id="76"/>
+  </Object>
+  <Object id="78" type="ConstrainedRelativePoint">
+   <Parent id="5"/>
+   <Parent id="23"/>
+   <Parent id="22"/>
+   <Parent id="77"/>
+  </Object>
+  <Object id="79" type="Label">
+   <Parent id="19"/>
+   <Parent id="78"/>
+   <Parent id="13"/>
+  </Object>
+ </Hierarchy>
+ <View>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="63" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="44" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="62" style="SolidLine" point-style="Round"/>
+  <Draw width="3" color="#00ff00" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="77" style="DashLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="36" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#a0a0a4" font="Ubuntu,20,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="60" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="55" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="53" style="SolidLine" point-style="Round"/>
+  <Draw width="3" color="#ffff00" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="56" style="DotLine" point-style="Round"/>
+  <Draw width="3" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="54" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="72" style="SolidLine" point-style="Round"/>
+  <Draw width="3" color="#ffff00" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="68" style="DotLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="42" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="67" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="76" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#ffff00" font="Ubuntu,20,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="58" style="SolidLine" point-style="Round"/>
+  <Draw width="3" color="#a0a0a4" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="48" style="DotLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,20,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="65" style="SolidLine" point-style="Round"/>
+  <Draw width="3" color="#00ff00" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="73" style="DashLine" point-style="Round"/>
+  <Draw width="-1" color="#00ff00" font="Ubuntu,20,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="75" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#ffff00" font="Ubuntu,20,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="70" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#000000" font="Ubuntu,16,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="27" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#00ff00" font="Ubuntu,20,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="79" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="71" style="SolidLine" point-style="Round"/>
+  <Draw width="-1" color="#0000ff" font="Ubuntu,11,-1,5,50,0,0,0,0,0" namecalcer="none" shown="true" object="47" style="SolidLine" point-style="Round"/>
+ </View>
+</KigDocument>

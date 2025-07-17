@@ -245,6 +245,7 @@ impl ReflectOn<Geo> for Ray {
             Geo::GeoCubicBezier(cb) => self.reflect_on_normal_intersect(cb),
             Geo::GeoPoint(_) => None,
             Geo::GeoLogic(l) => self.reflect_on_normal_intersect(l),
+            Geo::GeoEllipse(_ellipse) => todo!(),
         }
     }
 }
@@ -322,16 +323,13 @@ impl Intersect<MCircle> for Ray {
     type Intersection = Reflection;
     fn intersect(&self, mcircle: &MCircle) -> Option<Reflection> {
         let circle = mcircle.circle_b();
-        circle
-            .intersect(&self.to_line())
-            .map(|(r, s)| {
-                smallest_positive_sort(r, s).map(|(r, _)| {
-                    let rp = self.eval_at_r(r);
-                    let normal_r = Unit::new_normalize(rp - circle.origin);
-                    (rp, normal_r)
-                })
+        circle.intersect(&self.to_line()).and_then(|(r, s)| {
+            smallest_positive_sort(r, s).map(|(r, _)| {
+                let rp = self.eval_at_r(r);
+                let normal_r = Unit::new_normalize(rp - circle.origin);
+                (rp, normal_r)
             })
-            .flatten()
+        })
     }
 }
 
@@ -433,6 +431,7 @@ impl Intersect<Geo> for Ray {
             Geo::GeoCubicBezier(cb) => self.intersect(cb).map(|p| vec![p]),
             Geo::GeoPoint(_) => None,
             Geo::GeoLogic(l) => self.intersect(l),
+            Geo::GeoEllipse(_ellipse) => todo!(),
         }
     }
 }

@@ -2,6 +2,7 @@ extern crate nalgebra as na;
 use na::{distance, Matrix2, Point2, Rotation2, Unit, Vector2};
 
 pub type Float = f64;
+pub use std::f64::consts::*;
 pub type P2 = Point2<Float>;
 pub type V2 = Vector2<Float>;
 pub type U2 = Unit<V2>;
@@ -131,7 +132,7 @@ where
     let mut min_eval = Float::MAX;
     let mut res = None;
     for num in v {
-        let eval = f(&num);
+        let eval = f(num);
         if eval >= 0. && eval < min_eval {
             min_eval = eval;
             res = Some(*num);
@@ -252,7 +253,7 @@ pub fn extend_opt_vec<T>(isa: Option<Vec<T>>, isb: Option<Vec<T>>) -> Option<Vec
             } else if vb.is_empty() {
                 Some(res)
             } else {
-                res.extend(vb.into_iter());
+                res.extend(vb);
                 Some(res)
             }
         }
@@ -313,7 +314,7 @@ pub fn local_to_global(origin: &P2, rotation: &Rotation2<Float>, p: &V2) -> P2 {
 }
 
 pub fn quadratic_roots(a: Float, b: Float) -> Vec<Float> {
-    let mah = -1. * a * 0.5;
+    let mah = -a * 0.5;
     let discriminant = mah * mah - b;
     match discriminant {
         _ if discriminant.abs() == 0. => vec![mah],

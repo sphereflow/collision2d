@@ -75,7 +75,7 @@ impl ConvexPolygon {
                     .expect("convex hull: could not sort right side")
             }
         });
-        right.extend(left.into_iter());
+        right.extend(left);
 
         // first point == last point
         //
@@ -132,7 +132,7 @@ impl ConvexPolygon {
             let mut is_cw = is_clockwise_points(
                 &hull_points[hull_points.len() - 2],
                 &hull_points[hull_points.len() - 1],
-                &p,
+                p,
             );
             // the following variable will be set if the algorithm encounters a non-clockwise turn
             let mut not_cw_once = !is_cw;
@@ -141,7 +141,7 @@ impl ConvexPolygon {
                 is_cw = is_clockwise_points(
                     &hull_points[hull_points.len() - 2],
                     &hull_points[hull_points.len() - 1],
-                    &p,
+                    p,
                 );
                 if !is_cw {
                     not_cw_once = true;
@@ -216,7 +216,7 @@ impl Distance for ConvexPolygon {
         // if self contains p negate the result
         if let Some((ls, md)) = min_dist {
             if is_clockwise_points(&ls.get_a().coords, &ls.get_b().coords, &p.coords) {
-                md * -1.
+                -md
             } else {
                 md
             }
@@ -482,6 +482,7 @@ impl Intersect<Geo> for ConvexPolygon {
             Geo::GeoConvexPolygon(cp) => self.intersect(cp),
             Geo::GeoCubicBezier(cb) => self.intersect(cb),
             Geo::GeoLogic(logic) => self.intersect(logic),
+            Geo::GeoEllipse(_ellipse) => todo!(),
         }
     }
 }

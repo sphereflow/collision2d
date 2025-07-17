@@ -86,8 +86,8 @@ impl Intersect<LineSegment> for MCircle {
             .into_iter()
             .flatten()
             .chain(cb.intersect(ls).into_iter().flatten())
-            .chain(lsa.intersect(ls).into_iter())
-            .chain(lsb.intersect(ls).into_iter());
+            .chain(lsa.intersect(ls))
+            .chain(lsb.intersect(ls));
         let mut res: Option<OneOrTwo<P2>> = None;
         for p in points {
             // check wether point is on perimeter
@@ -137,9 +137,9 @@ impl Intersect<Circle> for MCircle {
         let points = ca
             .intersect(circle)
             .into_iter()
-            .chain(circle.intersect(&cb).into_iter())
-            .chain(circle.intersect(&lsa).into_iter())
-            .chain(circle.intersect(&lsb).into_iter())
+            .chain(circle.intersect(&cb))
+            .chain(circle.intersect(&lsa))
+            .chain(circle.intersect(&lsb))
             .flatten();
         let mut res: Option<OneOrTwo<P2>> = None;
         for p in points {
@@ -173,9 +173,9 @@ impl Intersect<MCircle> for MCircle {
         let points = mcircle
             .intersect(&ca)
             .into_iter()
-            .chain(mcircle.intersect(&cb).into_iter())
-            .chain(mcircle.intersect(&lsa).into_iter())
-            .chain(mcircle.intersect(&lsb).into_iter())
+            .chain(mcircle.intersect(&cb))
+            .chain(mcircle.intersect(&lsa))
+            .chain(mcircle.intersect(&lsb))
             .flatten();
         let mut res: Option<OneOrTwo<P2>> = None;
         for p in points {
