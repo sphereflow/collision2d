@@ -153,20 +153,41 @@ impl HasGeometry for Ellipse {
 
 impl HasAabb for Ellipse {
     fn get_aabb(&self) -> Aabb {
-        let alpha = self.rot.angle();
+        // global to local coordinate system of the ellipse => inverse rotation
+        let alpha = -self.rot.angle();
+        // angle smaller than 22.5 degrees => flip x and y axis
+        if alpha.abs() < FRAC_PI_8 {
+            let ellipse = Ellipse {
+                origin: P2::new(self.origin.y, self.origin.x),
+                a: self.b,
+                b: self.a,
+                rot: self.rot * Rotation2::new(FRAC_PI_2),
+            };
+            let aabb = ellipse.get_aabb();
+            // flip back x and y axis
+            return Aabb {
+                origin: P2::new(aabb.origin.y, aabb.origin.x),
+                width: aabb.height,
+                height: aabb.width,
+            };
+        }
+        // the circle on which all AABB corners are located
+        // local ellipse coordinate system => origin = (0.0, 0.0)
         let circle = Circle {
-            origin: self.origin,
+            origin: P2::new(0., 0.),
             radius: (self.a * self.a + self.b * self.b).sqrt(),
         };
+        // the tangent is the top line segment of the AABB
         let tangent = self.tangent_at_angle(alpha);
         let (r, _s) = circle
             .intersect(&tangent)
             .expect("Ellipse::get_aabb circle does not intersect line");
-        let p = tangent.eval_at_r(r);
+        // rotate tangent back to its position in the AABB (no translation)
+        let p = self.rot * tangent.eval_at_r(r);
         Aabb {
             origin: self.origin,
-            width: 2. * p.x,
-            height: 2. * p.y,
+            width: 2. * p.x.abs(),
+            height: 2. * p.y.abs(),
         }
     }
 }
