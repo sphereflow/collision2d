@@ -7,7 +7,7 @@ pub struct Ellipse {
     pub origin: P2,
     pub a: Float,
     pub b: Float,
-    rot: Rot2,
+    pub rot: Rot2,
 }
 
 impl Ellipse {
