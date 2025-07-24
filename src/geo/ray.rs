@@ -386,6 +386,13 @@ impl Intersect<CubicBezier> for Ray {
     }
 }
 
+impl Intersect<Ellipse> for Ray {
+    type Intersection = OneOrTwo<Reflection>;
+    fn intersect(&self, ellipse: &Ellipse) -> Option<Self::Intersection> {
+        ellipse.intersect(self)
+    }
+}
+
 impl Intersect<Logic> for Ray {
     type Intersection = Vec<Reflection>;
     fn intersect(&self, l: &Logic) -> Option<Self::Intersection> {
@@ -431,7 +438,7 @@ impl Intersect<Geo> for Ray {
             Geo::GeoCubicBezier(cb) => self.intersect(cb).map(|p| vec![p]),
             Geo::GeoPoint(_) => None,
             Geo::GeoLogic(l) => self.intersect(l),
-            Geo::GeoEllipse(_ellipse) => todo!(),
+            Geo::GeoEllipse(ellipse) => self.intersect(ellipse).map(|oot| oot.into_vec()),
         }
     }
 }

@@ -16,23 +16,30 @@ impl Ellipse {
         P2::new(self.a * c, self.b * s)
     }
 
-    /// returns a tangent line with a local rotation angle of alpha + PI / 2
+    /// returns a tangent line with a local rotation angle of -alpha
     /// helper function for get_aabb
     pub fn tangent_at_angle(&self, alpha: Float) -> Line {
-        if alpha > PI {
-            return self.tangent_at_angle(PI - alpha);
-        }
         let (dy, dx) = alpha.sin_cos();
+        let is_shallow = dy.abs() < dx.abs();
         let a_sq = self.a * self.a;
         let b_sq = self.b * self.b;
-        let div = dx * dx * self.a * self.a + dy * dy * self.b * self.b;
-        let plx_sq = -b_sq * 4. * div / (dx.powi(2) * a_sq - 4. * div);
-        let pl = P2::new(plx_sq.sqrt(), 0.);
+        let div = dx * dx * b_sq + dy * dy * a_sq;
+        // steep angle => set pl.y to zero and calculate pl.x
+        let pl = if !is_shallow {
+            let plx_sq = -a_sq * div / (dx.powi(2) * b_sq - div);
+            P2::new(plx_sq.sqrt(), 0.)
+        }
+        // shallow angle => set pl.x to zero and calculate pl.y
+        else {
+            let ply_sq = -b_sq * div / (dy.powi(2) * a_sq - div);
+            P2::new(0., ply_sq.sqrt())
+        };
         let d = V2::new(dx, dy);
-        Line::new(
-            local_to_global(&self.origin, &self.rot, &pl.coords),
-            self.rot * d,
-        )
+        Line::new(pl, d)
+    }
+
+    fn normal_from_local_point(&self, p1: P2) -> U2 {
+        U2::new_normalize(V2::new(p1.x * self.b.powi(2), p1.y * self.a.powi(2)))
     }
 }
 
@@ -69,7 +76,8 @@ impl Rotate for Ellipse {
 
 impl Contains for Ellipse {
     fn contains(&self, p: &P2) -> bool {
-        self.distance(p) <= 0.0
+        let pl = self.rot.inverse() * (p - self.origin);
+        pl.x.powi(2) / self.a.powi(2) + pl.y.powi(2) / self.b.powi(2) <= 1.0
     }
 }
 
@@ -155,30 +163,15 @@ impl HasAabb for Ellipse {
     fn get_aabb(&self) -> Aabb {
         // global to local coordinate system of the ellipse => inverse rotation
         let alpha = -self.rot.angle();
-        // angle smaller than 22.5 degrees => flip x and y axis
-        if alpha.abs() < FRAC_PI_8 {
-            let ellipse = Ellipse {
-                origin: P2::new(self.origin.y, self.origin.x),
-                a: self.b,
-                b: self.a,
-                rot: self.rot * Rotation2::new(FRAC_PI_2),
-            };
-            let aabb = ellipse.get_aabb();
-            // flip back x and y axis
-            return Aabb {
-                origin: P2::new(aabb.origin.y, aabb.origin.x),
-                width: aabb.height,
-                height: aabb.width,
-            };
-        }
         // the circle on which all AABB corners are located
         // local ellipse coordinate system => origin = (0.0, 0.0)
+        // the tangent is the top line segment of the AABB
+        // in coordinates local to the ellipse
+        let tangent = self.tangent_at_angle(alpha);
         let circle = Circle {
             origin: P2::new(0., 0.),
             radius: (self.a * self.a + self.b * self.b).sqrt(),
         };
-        // the tangent is the top line segment of the AABB
-        let tangent = self.tangent_at_angle(alpha);
         let (r, _s) = circle
             .intersect(&tangent)
             .expect("Ellipse::get_aabb circle does not intersect line");
@@ -203,9 +196,9 @@ fn quadratic_coefficients(
 ) -> (Float, Float) {
     let a_sq = a.powi(2);
     let b_sq = b.powi(2);
-    let div = dx.powi(2) * a_sq + dy.powi(2) * b_sq;
-    let p = 2. * (dx * plx * a_sq + dy * ply * b_sq) / div;
-    let q = (plx.powi(2) * a_sq + ply.powi(2) * b_sq) / div;
+    let div = dx.powi(2) * b_sq + dy.powi(2) * a_sq;
+    let p = 2. * (dx * plx * b_sq + dy * ply * a_sq) / div;
+    let q = (plx.powi(2) * b_sq + ply.powi(2) * a_sq - a_sq * b_sq) / div;
     (p, q)
 }
 
@@ -218,7 +211,7 @@ impl Intersect<Line> for Ellipse {
         let pl = rinv * (line.origin - self.origin);
         // direction of line in local coordinates
         let d = rinv * line.get_direction();
-        let (p, q) = if d.y >= d.x {
+        let (p, q) = if d.y >= d.x * 10. {
             quadratic_coefficients(pl.x, pl.y, d.x, d.y, self.a, self.b)
         } else {
             // d.y may be too small => flip the direction of the x and y axis
@@ -267,7 +260,7 @@ impl Intersect<LineSegment> for Ellipse {
 }
 
 impl Intersect<Ray> for Ellipse {
-    type Intersection = OneOrTwo<P2>;
+    type Intersection = OneOrTwo<Reflection>;
 
     fn intersect(&self, ray: &Ray) -> Option<Self::Intersection> {
         let rinv = self.rot.inverse();
@@ -281,13 +274,23 @@ impl Intersect<Ray> for Ellipse {
             // d.y may be too small => flip the direction of the x and y axis
             quadratic_coefficients(pl.y, pl.x, d.y, d.x, self.b, self.a)
         };
-        let fs = quadratic_roots(p, q);
+        let mut fs = quadratic_roots(p, q);
+        fs.retain(|f| *f >= 0.);
+        let local_ray = Ray::from_origin(P2::new(pl.x, pl.y), d.into_inner());
         match fs.len() {
             0 => None,
-            1 => Some(OneOrTwo::new(ray.eval_at_r(fs[0]))),
+            1 => {
+                let p1: P2 = ray.eval_at_r(fs[0]);
+                let n1: U2 = self.rot * self.normal_from_local_point(local_ray.eval_at_r(fs[0]));
+                Some(OneOrTwo::new((p1, n1)))
+            }
             _ => {
-                let mut oot = OneOrTwo::new(ray.eval_at_r(fs[0]));
-                oot.add(ray.eval_at_r(fs[1]));
+                let p1: P2 = ray.eval_at_r(fs[0]);
+                let n1: U2 = self.rot * self.normal_from_local_point(local_ray.eval_at_r(fs[0]));
+                let mut oot = OneOrTwo::new((p1, n1));
+                let p2: P2 = ray.eval_at_r(fs[1]);
+                let n2: U2 = self.rot * self.normal_from_local_point(local_ray.eval_at_r(fs[1]));
+                oot.add((p2, n2));
                 Some(oot)
             }
         }
